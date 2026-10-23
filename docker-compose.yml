@@ -12,6 +12,8 @@ services:
   migrate:
     build:
       context: ./backend
+      args:
+        PIP_INDEX_URL: ${PIP_INDEX_URL:-https://pypi.tuna.tsinghua.edu.cn/simple}
     image: stocksim-backend:local
     command: ["alembic", "upgrade", "head"]
     restart: "no"
@@ -33,6 +35,8 @@ services:
   backend:
     build:
       context: ./backend
+      args:
+        PIP_INDEX_URL: ${PIP_INDEX_URL:-https://pypi.tuna.tsinghua.edu.cn/simple}
     image: stocksim-backend:local
     restart: unless-stopped
     environment:
@@ -62,6 +66,8 @@ services:
   frontend:
     build:
       context: ./frontend
+      args:
+        NPM_REGISTRY: ${NPM_REGISTRY:-https://registry.npmmirror.com}
     image: stocksim-frontend:local
     restart: unless-stopped
     environment:

@@ -3,12 +3,17 @@
 
 ARG NODE_IMAGE=node:22-alpine
 ARG NGINX_IMAGE=nginxinc/nginx-unprivileged:1.27-alpine
+# npm 镜像（默认 npmmirror，国内可直连）；海外构建可传 --build-arg NPM_REGISTRY=https://registry.npmjs.org
+ARG NPM_REGISTRY=https://registry.npmmirror.com
 
 # ---------- build ----------
 FROM ${NODE_IMAGE} AS build
 
+ARG NPM_REGISTRY
+
 ENV npm_config_fund=false \
-    npm_config_audit=false
+    npm_config_audit=false \
+    npm_config_registry=${NPM_REGISTRY}
 
 WORKDIR /app
 

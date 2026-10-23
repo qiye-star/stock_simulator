@@ -89,6 +89,19 @@ docker compose up -d --build
 - 后端没有 CORS / Host / Origin 校验，两站均为同源 `/api`，无需额外配置。
 - 手机版资产曲线的存放位置以 `mobile-prototype/CLAUDE.md` 当前说明为准。
 
+## 国内构建加速
+
+构建镜像时的依赖源已默认指向国内镜像，可在 `.env` 里改：
+
+| 变量 | 默认值 | 海外官方源 |
+|---|---|---|
+| `PIP_INDEX_URL` | `https://pypi.tuna.tsinghua.edu.cn/simple`（清华） | `https://pypi.org/simple` |
+| `NPM_REGISTRY` | `https://registry.npmmirror.com`（npmmirror） | `https://registry.npmjs.org` |
+
+- 后端 Dockerfile 不再从 `ghcr.io` 拉 uv，而是用 pip 从镜像安装；依赖由 `uv.lock` 导出为带哈希的 requirements 后经镜像安装（镜像文件与官方一致，哈希照常校验）。
+- 基础镜像（`python`、`node`、`nginx-unprivileged`、`postgres`）仍来自 Docker Hub，国内拉取慢时请给 Docker 守护进程配置镜像加速：在 `/etc/docker/daemon.json` 写入 `{"registry-mirrors": ["<你的加速地址>"]}` 后 `sudo systemctl restart docker`（1Panel 的「容器 → 配置」里也可设置镜像加速）。加速地址请用你自己可用的服务（如云厂商提供的专属加速器），公共镜像站变动频繁，仓库里不写死。
+- 本地开发（`uv sync` / `npm ci`）与开发覆盖层 `docker-compose.dev.yml`（使用 `ghcr.io/astral-sh/uv` 镜像）未改动。
+
 ## 7. 本地开发（不使用 Docker）
 
 ```bash
