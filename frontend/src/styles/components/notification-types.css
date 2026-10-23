@@ -1,0 +1,13 @@
+/* 通知类型色（新增，legacy 中 showNotification 不区分类型；默认 info 外观与原版一致） */
+.notification.notification-success {
+    border-color: var(--success-color);
+}
+
+.notification.notification-warning {
+    border-color: var(--warning-color);
+}
+
+.notification.notification-error {
+    border-color: var(--danger-color);
+    color: var(--danger-color);
+}

@@ -1,0 +1,63 @@
+/* 全局 select 样式 */
+select {
+    padding: 10px 14px;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-size: 14px;
+    cursor: pointer;
+}
+
+/* ==================== 语言切换按钮 ==================== */
+/* 登录页右上角语言切换按钮 */
+.lang-toggle-btn {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    width: 40px;
+    height: 40px;
+    background: rgba(88, 166, 255, 0.1);
+    border: 1px solid rgba(88, 166, 255, 0.2);
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    z-index: 10;
+}
+
+.lang-toggle-btn:hover {
+    background: rgba(88, 166, 255, 0.2);
+    border-color: var(--primary-color);
+    transform: scale(1.1);
+    box-shadow: 0 0 12px rgba(88, 166, 255, 0.3);
+}
+
+.lang-toggle-btn:active {
+    transform: scale(0.95);
+}
+
+/* 设置面板中的语言下拉框样式（继承 .setting-item select，补充宽度） */
+.setting-item select#language-select {
+    min-width: 120px;
+    cursor: pointer;
+}
+
+/* select option 样式适配深色主题 */
+select option {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+}
+
+select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+
+.condition-input-group input {
+    flex: 1;
+}
+

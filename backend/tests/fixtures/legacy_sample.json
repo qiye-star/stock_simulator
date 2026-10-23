@@ -1,0 +1,83 @@
+{
+  "username": "legacy_bob",
+  "passwordHash": "pbkdf2-sha256-100k$00112233445566778899aabbccddeeff$abababababababababababababababababababababababababababababababab",
+  "createdAt": 1700000000000,
+  "tutorialCompleted": true,
+  "theme": "light",
+  "refreshRate": 3000,
+  "lang": "zh-CN",
+  "achievements": [],
+  "saves": [
+    {
+      "id": "9c1f0c4e-1111-4222-8333-444455556666",
+      "name": "旧存档一",
+      "createdAt": 1700000000000,
+      "fund": 929800.98,
+      "initialFund": 1000000,
+      "holdings": {
+        "600519": {
+          "name": "贵州茅台",
+          "quantity": 50,
+          "avgPrice": 1500.5,
+          "totalCost": 75025.0
+        }
+      },
+      "records": [
+        {
+          "time": 1700000300000,
+          "code": "600519",
+          "name": "贵州茅台",
+          "type": "sell",
+          "price": 1600,
+          "quantity": 50,
+          "amount": 79896.0,
+          "pnl": 4871.0
+        },
+        {
+          "time": 1700000200000,
+          "code": "600519",
+          "name": "贵州茅台",
+          "type": "buy",
+          "price": 1500.5,
+          "quantity": 100,
+          "amount": -150095.02,
+          "pnl": 0
+        }
+      ],
+      "watchlist": [
+        "600036"
+      ],
+      "achievements": [
+        "first_trade",
+        "first_profit",
+        "not_a_real_achievement"
+      ],
+      "settings": {
+        "buyFee": 0.0003,
+        "sellFee": 0.0013,
+        "t0Mode": false,
+        "tradeUnit": 1
+      },
+      "dayTrades": {
+        "600519": {
+          "buy": 0,
+          "sell": 0
+        }
+      },
+      "gameStats": {
+        "tradeCount": 1,
+        "profitCount": 1,
+        "lossCount": 0,
+        "maxHoldings": 1,
+        "sectorsTraded": {},
+        "dayTrades": 0
+      },
+      "autoTrade": {
+        "enabled": false,
+        "paused": false,
+        "configs": [],
+        "stats": {}
+      }
+    }
+  ]
+}

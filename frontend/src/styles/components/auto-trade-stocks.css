@@ -1,0 +1,142 @@
+/* 自动交易股票列表 */
+.auto-trade-stock-list {
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.auto-trade-stock-list .auto-trade-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.auto-trade-stock-list .auto-trade-header h4 {
+    margin-bottom: 0;
+    color: var(--text-secondary);
+}
+
+.auto-trade-stock-list .auto-trade-header .btn-small {
+    padding: 6px 12px;
+    font-size: 12px;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.auto-trade-stock-list .auto-trade-header .btn-small:hover {
+    background: var(--danger-color);
+    color: white;
+    border-color: var(--danger-color);
+}
+
+.auto-trade-stock-list .empty-tip {
+    text-align: center;
+    color: var(--text-secondary);
+    padding: 20px;
+}
+
+.auto-trade-stock-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    background: var(--bg-tertiary);
+    border-radius: 8px;
+    margin-bottom: 10px;
+    border-left: 3px solid var(--primary-color);
+}
+
+.auto-trade-stock-item.sell {
+    border-left-color: var(--danger-color);
+}
+
+.auto-trade-stock-item.buy {
+    border-left-color: var(--success-color);
+}
+
+.auto-trade-stock-info {
+    flex: 1;
+}
+
+.auto-trade-stock-info .stock-code {
+    font-weight: 600;
+    font-size: 16px;
+    margin-bottom: 5px;
+}
+
+.auto-trade-stock-info .stock-condition {
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.auto-trade-stock-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.auto-trade-stock-actions button {
+    padding: 5px 12px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.2s;
+}
+
+.auto-trade-stock-actions .btn-delete {
+    background: var(--danger-color);
+    color: white;
+}
+
+.auto-trade-stock-actions .btn-delete:hover {
+    background: #ff6b6b;
+}
+
+.auto-trade-stock-actions .btn-edit {
+    background: var(--primary-color);
+    color: white;
+}
+
+.auto-trade-stock-actions .btn-edit:hover {
+    background: #4d94ff;
+}
+
+.add-stock-form {
+    padding-top: 10px;
+}
+
+.add-stock-form h4 {
+    margin-bottom: 20px;
+    color: var(--text-secondary);
+}
+
+.btn-secondary {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    padding: 12px 24px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.3s;
+}
+
+.btn-secondary:hover {
+    background: var(--border-color);
+}
+
+.btn-danger {
+    background: #ff4757;
+    color: white;
+    border-color: #ff4757;
+}
+
+.btn-danger:hover {
+    background: #ff3742;
+    border-color: #ff3742;
+}

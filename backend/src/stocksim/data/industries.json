@@ -1,0 +1,658 @@
+[
+  {
+    "name": "券商",
+    "stock_count": 20,
+    "base_price_range_yuan": [
+      8,
+      30
+    ]
+  },
+  {
+    "name": "新能源",
+    "stock_count": 16,
+    "base_price_range_yuan": [
+      30,
+      300
+    ]
+  },
+  {
+    "name": "银行",
+    "stock_count": 16,
+    "base_price_range_yuan": [
+      5,
+      15
+    ]
+  },
+  {
+    "name": "军工",
+    "stock_count": 15,
+    "base_price_range_yuan": [
+      5,
+      100
+    ]
+  },
+  {
+    "name": "教育",
+    "stock_count": 14,
+    "base_price_range_yuan": [
+      5,
+      100
+    ]
+  },
+  {
+    "name": "食品",
+    "stock_count": 13,
+    "base_price_range_yuan": [
+      5,
+      100
+    ]
+  },
+  {
+    "name": "光伏",
+    "stock_count": 12,
+    "base_price_range_yuan": [
+      5,
+      100
+    ]
+  },
+  {
+    "name": "化工",
+    "stock_count": 11,
+    "base_price_range_yuan": [
+      5,
+      100
+    ]
+  },
+  {
+    "name": "家电",
+    "stock_count": 11,
+    "base_price_range_yuan": [
+      5,
+      100
+    ]
+  },
+  {
+    "name": "零售",
+    "stock_count": 10,
+    "base_price_range_yuan": [
+      5,
+      100
+    ]
+  },
+  {
+    "name": "医药",
+    "stock_count": 9,
+    "base_price_range_yuan": [
+      20,
+      200
+    ]
+  },
+  {
+    "name": "机械",
+    "stock_count": 9,
+    "base_price_range_yuan": [
+      5,
+      100
+    ]
+  },
+  {
+    "name": "LED",
+    "stock_count": 8,
+    "base_price_range_yuan": [
+      5,
+      100
+    ]
+  },
+  {
+    "name": "旅游",
+    "stock_count": 8,
+    "base_price_range_yuan": [
+      5,
+      100
+    ]
+  },
+  {
+    "name": "游戏",
+    "stock_count": 8,
+    "base_price_range_yuan": [
+      5,
+      100
+    ]
+  },
+  {
+    "name": "芯片",
+    "stock_count": 8,
+    "base_price_range_yuan": [
+      5,
+      100
+    ]
+  },
+  {
+    "name": "通信",
+    "stock_count": 8,
+    "base_price_range_yuan": [
+      5,
+      100
+    ]
+  },
+  {
+    "name": "有色",
+    "stock_count": 7,
+    "base_price_range_yuan": [
+      5,
+      100
+    ]
+  },
+  {
+    "name": "汽车零部件",
+    "stock_count": 7,
+    "base_price_range_yuan": [
+      5,
+      100
+    ]
+  },
+  {
+    "name": "电力",
+    "stock_count": 7,
+    "base_price_range_yuan": [
+      5,
+      100
+    ]
+  },
+  {
+    "name": "钢铁",
+    "stock_count": 7,
+    "base_price_range_yuan": [
+      5,
+      100
+    ]
+  },
+  {
+    "name": "建材",
+    "stock_count": 6,
+    "base_price_range_yuan": [
+      5,
+      100
+    ]
+  },
+  {
+    "name": "煤炭",
+    "stock_count": 6,
+    "base_price_range_yuan": [
+      5,
+      100
+    ]
+  },
+  {
+    "name": "生物制药",
+    "stock_count": 6,
+    "base_price_range_yuan": [
+      5,
+      100
+    ]
+  },
+  {
+    "name": "白酒",
+    "stock_count": 6,
+    "base_price_range_yuan": [
+      50,
+      2000
+    ]
+  },
+  {
+    "name": "传媒",
+    "stock_count": 5,
+    "base_price_range_yuan": [
+      5,
+      100
+    ]
+  },
+  {
+    "name": "保险",
+    "stock_count": 5,
+    "base_price_range_yuan": [
+      20,
+      80
+    ]
+  },
+  {
+    "name": "养殖",
+    "stock_count": 5,
+    "base_price_range_yuan": [
+      5,
+      100
+    ]
+  },
+  {
+    "name": "基建",
+    "stock_count": 5,
+    "base_price_range_yuan": [
+      5,
+      100
+    ]
+  },
+  {
+    "name": "服装",
+    "stock_count": 5,
+    "base_price_range_yuan": [
+      5,
+      100
+    ]
+  },
+  {
+    "name": "汽车",
+    "stock_count": 5,
+    "base_price_range_yuan": [
+      5,
+      100
+    ]
+  },
+  {
+    "name": "物流",
+    "stock_count": 5,
+    "base_price_range_yuan": [
+      5,
+      100
+    ]
+  },
+  {
+    "name": "电子",
+    "stock_count": 5,
+    "base_price_range_yuan": [
+      5,
+      100
+    ]
+  },
+  {
+    "name": "高速",
+    "stock_count": 5,
+    "base_price_range_yuan": [
+      5,
+      100
+    ]
+  },
+  {
+    "name": "包装",
+    "stock_count": 4,
+    "base_price_range_yuan": [
+      5,
+      100
+    ]
+  },
+  {
+    "name": "房地产",
+    "stock_count": 4,
+    "base_price_range_yuan": [
+      5,
+      100
+    ]
+  },
+  {
+    "name": "机器人",
+    "stock_count": 4,
+    "base_price_range_yuan": [
+      5,
+      100
+    ]
+  },
+  {
+    "name": "种业",
+    "stock_count": 4,
+    "base_price_range_yuan": [
+      5,
+      100
+    ]
+  },
+  {
+    "name": "造纸",
+    "stock_count": 4,
+    "base_price_range_yuan": [
+      5,
+      100
+    ]
+  },
+  {
+    "name": "光伏设备",
+    "stock_count": 3,
+    "base_price_range_yuan": [
+      5,
+      100
+    ]
+  },
+  {
+    "name": "农药",
+    "stock_count": 3,
+    "base_price_range_yuan": [
+      5,
+      100
+    ]
+  },
+  {
+    "name": "家纺",
+    "stock_count": 3,
+    "base_price_range_yuan": [
+      5,
+      100
+    ]
+  },
+  {
+    "name": "航空",
+    "stock_count": 3,
+    "base_price_range_yuan": [
+      5,
+      100
+    ]
+  },
+  {
+    "name": "酒店",
+    "stock_count": 3,
+    "base_price_range_yuan": [
+      5,
+      100
+    ]
+  },
+  {
+    "name": "金融科技",
+    "stock_count": 3,
+    "base_price_range_yuan": [
+      5,
+      100
+    ]
+  },
+  {
+    "name": "光学",
+    "stock_count": 2,
+    "base_price_range_yuan": [
+      5,
+      100
+    ]
+  },
+  {
+    "name": "农业",
+    "stock_count": 2,
+    "base_price_range_yuan": [
+      5,
+      100
+    ]
+  },
+  {
+    "name": "医疗",
+    "stock_count": 2,
+    "base_price_range_yuan": [
+      5,
+      100
+    ]
+  },
+  {
+    "name": "医药服务",
+    "stock_count": 2,
+    "base_price_range_yuan": [
+      5,
+      100
+    ]
+  },
+  {
+    "name": "半导体",
+    "stock_count": 2,
+    "base_price_range_yuan": [
+      5,
+      100
+    ]
+  },
+  {
+    "name": "半导体设备",
+    "stock_count": 2,
+    "base_price_range_yuan": [
+      5,
+      100
+    ]
+  },
+  {
+    "name": "安防",
+    "stock_count": 2,
+    "base_price_range_yuan": [
+      5,
+      100
+    ]
+  },
+  {
+    "name": "文具",
+    "stock_count": 2,
+    "base_price_range_yuan": [
+      5,
+      100
+    ]
+  },
+  {
+    "name": "核电",
+    "stock_count": 2,
+    "base_price_range_yuan": [
+      5,
+      100
+    ]
+  },
+  {
+    "name": "港口",
+    "stock_count": 2,
+    "base_price_range_yuan": [
+      5,
+      100
+    ]
+  },
+  {
+    "name": "石油",
+    "stock_count": 2,
+    "base_price_range_yuan": [
+      5,
+      100
+    ]
+  },
+  {
+    "name": "纺织",
+    "stock_count": 2,
+    "base_price_range_yuan": [
+      5,
+      100
+    ]
+  },
+  {
+    "name": "航运",
+    "stock_count": 2,
+    "base_price_range_yuan": [
+      5,
+      100
+    ]
+  },
+  {
+    "name": "设备",
+    "stock_count": 2,
+    "base_price_range_yuan": [
+      5,
+      100
+    ]
+  },
+  {
+    "name": "软件",
+    "stock_count": 2,
+    "base_price_range_yuan": [
+      5,
+      100
+    ]
+  },
+  {
+    "name": "铁路",
+    "stock_count": 2,
+    "base_price_range_yuan": [
+      5,
+      100
+    ]
+  },
+  {
+    "name": "面板",
+    "stock_count": 2,
+    "base_price_range_yuan": [
+      5,
+      100
+    ]
+  },
+  {
+    "name": "人工智能",
+    "stock_count": 1,
+    "base_price_range_yuan": [
+      5,
+      100
+    ]
+  },
+  {
+    "name": "医疗器械",
+    "stock_count": 1,
+    "base_price_range_yuan": [
+      5,
+      100
+    ]
+  },
+  {
+    "name": "医疗用品",
+    "stock_count": 1,
+    "base_price_range_yuan": [
+      5,
+      100
+    ]
+  },
+  {
+    "name": "半导体材料",
+    "stock_count": 1,
+    "base_price_range_yuan": [
+      5,
+      100
+    ]
+  },
+  {
+    "name": "工业自动化",
+    "stock_count": 1,
+    "base_price_range_yuan": [
+      5,
+      100
+    ]
+  },
+  {
+    "name": "数控",
+    "stock_count": 1,
+    "base_price_range_yuan": [
+      5,
+      100
+    ]
+  },
+  {
+    "name": "新能源汽车",
+    "stock_count": 1,
+    "base_price_range_yuan": [
+      5,
+      100
+    ]
+  },
+  {
+    "name": "日用品",
+    "stock_count": 1,
+    "base_price_range_yuan": [
+      5,
+      100
+    ]
+  },
+  {
+    "name": "智能装备",
+    "stock_count": 1,
+    "base_price_range_yuan": [
+      5,
+      100
+    ]
+  },
+  {
+    "name": "机场",
+    "stock_count": 1,
+    "base_price_range_yuan": [
+      5,
+      100
+    ]
+  },
+  {
+    "name": "激光设备",
+    "stock_count": 1,
+    "base_price_range_yuan": [
+      5,
+      100
+    ]
+  },
+  {
+    "name": "照明",
+    "stock_count": 1,
+    "base_price_range_yuan": [
+      5,
+      100
+    ]
+  },
+  {
+    "name": "电器",
+    "stock_count": 1,
+    "base_price_range_yuan": [
+      5,
+      100
+    ]
+  },
+  {
+    "name": "电子制造",
+    "stock_count": 1,
+    "base_price_range_yuan": [
+      5,
+      100
+    ]
+  },
+  {
+    "name": "稀土",
+    "stock_count": 1,
+    "base_price_range_yuan": [
+      5,
+      100
+    ]
+  },
+  {
+    "name": "网络安全",
+    "stock_count": 1,
+    "base_price_range_yuan": [
+      5,
+      100
+    ]
+  },
+  {
+    "name": "计算机",
+    "stock_count": 1,
+    "base_price_range_yuan": [
+      5,
+      100
+    ]
+  },
+  {
+    "name": "设备制造",
+    "stock_count": 1,
+    "base_price_range_yuan": [
+      5,
+      100
+    ]
+  },
+  {
+    "name": "轨道交通",
+    "stock_count": 1,
+    "base_price_range_yuan": [
+      5,
+      100
+    ]
+  },
+  {
+    "name": "饮料",
+    "stock_count": 1,
+    "base_price_range_yuan": [
+      5,
+      100
+    ]
+  }
+]

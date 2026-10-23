@@ -1,0 +1,105 @@
+# 生产形态的一键编排：migrate（alembic upgrade head）-> backend -> frontend
+#
+#   docker compose up -d --build                      # 默认 sqlite
+#   docker compose --profile postgres up -d --build   # 额外启动 postgres（需在 .env 中把 DATABASE_URL 指向 postgres）
+#   docker compose --profile mysql up -d --build      # 额外启动 mysql
+#
+# 变量见 .env.example。开发热更新请叠加 docker-compose.dev.yml。
+
+name: stocksim
+
+services:
+  migrate:
+    build:
+      context: ./backend
+    image: stocksim-backend:local
+    command: ["alembic", "upgrade", "head"]
+    restart: "no"
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-sqlite:////data/stocksim.db}
+    volumes:
+      - backend-data:/data
+    depends_on:
+      postgres:
+        condition: service_healthy
+        required: false
+      mysql:
+        condition: service_healthy
+        required: false
+
+  backend:
+    build:
+      context: ./backend
+    image: stocksim-backend:local
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-sqlite:////data/stocksim.db}
+      ENABLE_DEBUG_API: ${ENABLE_DEBUG_API:-false}
+      TICKS_PER_TRADING_DAY: ${TICKS_PER_TRADING_DAY:-20}
+    volumes:
+      - backend-data:/data
+    expose:
+      - "8000"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+        required: false
+      mysql:
+        condition: service_healthy
+        required: false
+
+  frontend:
+    build:
+      context: ./frontend
+    image: stocksim-frontend:local
+    restart: unless-stopped
+    environment:
+      BACKEND_UPSTREAM: http://backend:8000
+    ports:
+      - "${FRONTEND_PORT:-18000}:8080"
+    depends_on:
+      backend:
+        condition: service_healthy
+
+  postgres:
+    profiles: ["postgres"]
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-stocksim}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-me}
+      POSTGRES_DB: ${POSTGRES_DB:-stocksim}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 10s
+
+  mysql:
+    profiles: ["mysql"]
+    image: mysql:8.4
+    restart: unless-stopped
+    command: ["--character-set-server=utf8mb4", "--collation-server=utf8mb4_unicode_ci"]
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-stocksim}
+      MYSQL_USER: ${MYSQL_USER:-stocksim}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-change-me}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-change-me-root}
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$${MYSQL_ROOT_PASSWORD} --silent"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+      start_period: 20s
+
+volumes:
+  backend-data:
+  postgres-data:
+  mysql-data:

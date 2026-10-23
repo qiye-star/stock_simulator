@@ -1,0 +1,21 @@
+{
+  "name": "stock-simulator-frontend",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "description": "股市模拟器 v2 前端（Vite + 原生 ES 模块，无框架）",
+  "engines": {
+    "node": ">=20.19.0"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "vite": "^8.3.5",
+    "vitest": "^5.0.5"
+  }
+}

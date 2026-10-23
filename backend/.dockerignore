@@ -1,0 +1,22 @@
+# 不进入构建上下文的文件（保持镜像小且不泄露本地环境）
+.git
+.gitignore
+.venv
+**/.venv
+**/__pycache__
+**/*.py[cod]
+.pytest_cache
+.ruff_cache
+.mypy_cache
+.coverage
+htmlcov
+data
+**/*.db
+**/*.db-journal
+.env
+.env.*
+!.env.example
+tests
+**/*Zone.Identifier
+Dockerfile
+.dockerignore

@@ -1,0 +1,39 @@
+/* 成就弹窗 */
+.achievement-popup {
+    position: fixed;
+    top: 20px;
+    right: -400px;
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    border: 1px solid var(--primary-color);
+    padding: 20px;
+    z-index: 2000;
+    transition: right 0.5s ease;
+    box-shadow: 0 4px 20px rgba(88, 166, 255, 0.3);
+}
+
+.achievement-popup.show {
+    right: 20px;
+}
+
+.achievement-content {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.achievement-content .btn-small {
+    padding: 6px 16px;
+    font-size: 13px;
+    margin-left: 10px;
+}
+
+.achievement-content .achievement-icon {
+    font-size: 40px;
+}
+
+.achievement-info h4 {
+    color: var(--primary-color);
+    margin-bottom: 5px;
+}
+

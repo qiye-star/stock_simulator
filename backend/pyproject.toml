@@ -1,0 +1,47 @@
+[project]
+name = "stocksim"
+version = "0.1.0"
+description = "股市模拟器后端（FastAPI + SQLAlchemy 2）"
+requires-python = ">=3.12"
+dependencies = [
+    "alembic>=1.20.1",
+    "fastapi>=0.161.1",
+    "httpx>=0.28.1",
+    "psycopg[binary]>=3.3.6",
+    "pwdlib[argon2]>=0.3.1",
+    "pydantic-settings>=2.16.1",
+    "pymysql>=1.2.3",
+    "sqlalchemy>=2",
+    "uvicorn[standard]>=0.54.0",
+]
+
+[project.scripts]
+stocksim = "stocksim.main:run"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers --import-mode=importlib"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["src", "tests"]
+# 迁移文件由 autogenerate 生成，不做风格检查
+extend-exclude = ["alembic/versions"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "SIM", "RUF"]
+ignore = ["B008", "RUF001", "RUF002", "RUF003"]  # B008: FastAPI Depends 惯用写法；RUF00x: 中文全角标点是有意为之
+
+[tool.ruff.lint.per-file-ignores]
+"alembic/**" = ["E402"]
+
+[build-system]
+requires = ["uv_build>=0.13.5,<0.14.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+    "ruff>=0.17.2",
+]

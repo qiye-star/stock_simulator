@@ -1,0 +1,30 @@
+/*
+ * 样式总入口。导入顺序即原 legacy/styles.css 的级联顺序，不得随意调换。
+ * 注意：base.css 中的 body 规则与 themes.css 中的 :root 变量在原文件中顺序相反，
+ * 二者无相同属性冲突，视觉结果不变。
+ */
+@import './base.css';
+@import './themes.css';
+@import './components/auth.css';
+@import './components/common.css';
+@import './components/notification-types.css';
+@import './components/saves.css';
+@import './components/setup.css';
+@import './components/layout.css';
+@import './components/market.css';
+@import './components/market-detail.css';
+@import './components/trade.css';
+@import './components/portfolio.css';
+@import './components/profile.css';
+@import './components/modal.css';
+@import './components/time-control.css';
+@import './components/achievement-popup.css';
+@import './components/tutorial.css';
+@import './components/scrollbar.css';
+@import './responsive.css';
+@import './components/auto-trade.css';
+@import './components/controls.css';
+@import './components/number-stepper.css';
+@import './responsive-tail.css';
+@import './components/context-menu.css';
+@import './components/auto-trade-stocks.css';

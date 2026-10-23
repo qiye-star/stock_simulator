@@ -1,0 +1,225 @@
+/* 交易页面 */
+.trade-container {
+    display: flex;
+    gap: 30px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.trade-panel {
+    flex: 1;
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    padding: 25px;
+}
+
+.trade-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 25px;
+}
+
+.trade-tab {
+    flex: 1;
+    padding: 15px;
+    background: var(--bg-tertiary);
+    border: none;
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.trade-tab.active[data-trade="buy"] {
+    background: var(--danger-color);
+    color: white;
+}
+
+.trade-tab.active[data-trade="sell"] {
+    background: var(--success-color);
+    color: white;
+}
+
+.trade-form {
+    display: none;
+}
+
+.trade-form.active {
+    display: block;
+}
+
+.form-row {
+    margin-bottom: 20px;
+}
+
+.form-row label {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--text-secondary);
+    font-size: 14px;
+}
+
+.form-row input {
+    width: 100%;
+    padding: 14px;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-size: 16px;
+}
+
+.form-row input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+
+.stock-name-tip {
+    display: inline-block;
+    margin-left: 10px;
+    color: var(--primary-color);
+    font-size: 14px;
+}
+
+.form-tip {
+    display: block;
+    margin-top: 8px;
+    padding: 8px 12px;
+    background: rgba(250, 173, 20, 0.1);
+    border: 1px solid var(--warning-color);
+    border-radius: 6px;
+    color: var(--warning-color);
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.form-row select option:disabled {
+    color: var(--text-secondary);
+    opacity: 0.6;
+}
+
+.quantity-btns {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.quantity-btns button {
+    flex: 1;
+    padding: 10px;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    color: var(--text-primary);
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.quantity-btns button:hover {
+    background: var(--border-color);
+}
+
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 15px;
+    background: var(--bg-tertiary);
+    border-radius: 8px;
+}
+
+.info-row b {
+    color: var(--primary-color);
+}
+
+.btn-large {
+    padding: 18px;
+    font-size: 18px;
+    margin-top: 10px;
+}
+
+.trade-holdings {
+    width: 400px;
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    padding: 25px;
+}
+
+.trade-holdings-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.trade-holdings-header h3 {
+    margin: 0;
+    padding: 0;
+    border: none;
+}
+
+.portfolio-time-display {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 5px;
+}
+
+.portfolio-time {
+    font-size: 24px;
+    font-weight: bold;
+    color: var(--primary-color);
+}
+
+.portfolio-status {
+    font-size: 12px;
+    padding: 2px 10px;
+    border-radius: 12px;
+    background: var(--bg-tertiary);
+    color: var(--text-secondary);
+}
+
+.holdings-list {
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+.holding-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 15px;
+    border-bottom: 1px solid var(--border-color);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.holding-item:hover {
+    background: var(--bg-tertiary);
+}
+
+.holding-info .name {
+    font-weight: 500;
+}
+
+.holding-info .code {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.holding-qty {
+    text-align: right;
+}
+
+.holding-qty .qty {
+    font-weight: 500;
+}
+
+.holding-qty .pnl {
+    font-size: 13px;
+    margin-top: 3px;
+}
+

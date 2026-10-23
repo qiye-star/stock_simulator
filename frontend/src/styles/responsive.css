@@ -1,0 +1,495 @@
+/* 响应式 */
+@media (max-width: 1200px) {
+    .market-container {
+        flex-direction: column;
+        height: auto;
+    }
+    
+    .market-sidebar {
+        width: 100%;
+        max-height: 400px;
+    }
+    
+    .trade-container {
+        flex-direction: column;
+    }
+    
+    .trade-holdings {
+        width: 100%;
+    }
+    
+    .portfolio-summary {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    
+    .chart-container {
+        min-height: 200px;
+        max-height: 240px;
+    }
+    
+    .volume-chart-container {
+        min-height: 100px;
+        max-height: 120px;
+    }
+}
+
+/* 登录界面响应式优化 */
+@media (max-width: 480px) {
+    #auth-screen {
+        padding: 16px;
+    }
+    
+    .auth-container {
+        padding: 32px 24px;
+        border-radius: 20px;
+    }
+    
+    .auth-container h1 {
+        font-size: 26px;
+        gap: 8px;
+    }
+    
+    .auth-container h1 .logo-icon {
+        font-size: 30px;
+    }
+    
+    .subtitle {
+        font-size: 14px;
+        margin-bottom: 24px;
+    }
+    
+    .auth-tabs {
+        margin-bottom: 24px;
+    }
+    
+    .tab-btn {
+        padding: 10px 16px;
+        font-size: 14px;
+    }
+    
+    .auth-form input {
+        padding: 14px 16px;
+        font-size: 16px; /* 防止iOS缩放 */
+    }
+    
+    .auth-form .btn-primary {
+        padding: 14px 20px;
+        font-size: 16px;
+    }
+}
+
+@media (max-width: 768px) {
+    .main-header {
+        flex-wrap: wrap;
+        padding: 10px 15px;
+    }
+    
+    .main-nav {
+        order: 3;
+        width: 100%;
+        margin-top: 10px;
+        justify-content: center;
+    }
+    
+    .portfolio-summary {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .profile-header {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .profile-stats {
+        margin-left: 0;
+        margin-top: 20px;
+    }
+}
+
+/* 笔记本屏幕 (992px - 1199px) */
+@media (max-width: 1199px) and (min-width: 992px) {
+    .market-container {
+        flex-direction: column;
+        height: auto;
+    }
+    
+    .market-sidebar {
+        width: 100%;
+        max-height: 400px;
+    }
+    
+    .trade-container {
+        flex-direction: column;
+    }
+    
+    .trade-holdings {
+        width: 100%;
+    }
+    
+    .portfolio-summary {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    
+    .stock-list-header {
+        font-size: 13px;
+    }
+    
+    .stock-item {
+        padding: 12px;
+    }
+    
+    .stock-item-price,
+    .stock-item-change,
+    .stock-item-volume {
+        font-size: 13px;
+    }
+    
+    .chart-container {
+        min-height: 190px;
+        max-height: 230px;
+    }
+    
+    .volume-chart-container {
+        min-height: 95px;
+        max-height: 115px;
+    }
+}
+
+/* 平板屏幕 (768px - 991px) */
+@media (max-width: 991px) and (min-width: 768px) {
+    .market-container {
+        flex-direction: column;
+        height: auto;
+    }
+    
+    .market-sidebar {
+        width: 100%;
+        max-height: 350px;
+    }
+    
+    .trade-container {
+        flex-direction: column;
+    }
+    
+    .trade-holdings {
+        width: 100%;
+    }
+    
+    .portfolio-summary {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .stock-list-header {
+        font-size: 12px;
+        padding: 10px;
+    }
+    
+    .stock-item {
+        padding: 10px;
+    }
+    
+    .stock-item-info .name {
+        font-size: 14px;
+    }
+    
+    .stock-item-info .code {
+        font-size: 11px;
+    }
+    
+    .stock-item-price,
+    .stock-item-change,
+    .stock-item-volume {
+        font-size: 12px;
+    }
+    
+    .detail-quote {
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+    
+    .quote-col {
+        min-width: 120px;
+    }
+    
+    .chart-container {
+        min-height: 180px;
+        max-height: 220px;
+    }
+    
+    .volume-chart-container {
+        min-height: 90px;
+        max-height: 110px;
+    }
+}
+
+/* 移动设备 (< 768px) */
+@media (max-width: 767px) {
+    .main-header {
+        flex-wrap: wrap;
+        padding: 10px 15px;
+    }
+    
+    .main-nav {
+        order: 3;
+        width: 100%;
+        margin-top: 10px;
+        justify-content: center;
+    }
+    
+    .main-nav button {
+        padding: 8px 12px;
+        font-size: 13px;
+    }
+    
+    .market-container {
+        flex-direction: column;
+        height: auto;
+    }
+    
+    .market-sidebar {
+        width: 100%;
+        max-height: 300px;
+    }
+    
+    .trade-container {
+        flex-direction: column;
+    }
+    
+    .trade-holdings {
+        width: 100%;
+        max-height: 300px;
+    }
+    
+    .portfolio-summary {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+    
+    .portfolio-stat {
+        padding: 12px;
+    }
+    
+    .portfolio-stat-label {
+        font-size: 12px;
+    }
+    
+    .portfolio-stat-value {
+        font-size: 16px;
+    }
+    
+    .profile-header {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .profile-stats {
+        margin-left: 0;
+        margin-top: 20px;
+    }
+    
+    .stock-list-header {
+        font-size: 11px;
+        padding: 8px;
+    }
+    
+    .stock-list-header span {
+        padding: 0 5px;
+    }
+    
+    .stock-item {
+        padding: 8px;
+    }
+    
+    .stock-item-info {
+        min-width: 80px;
+    }
+    
+    .stock-item-info .name {
+        font-size: 13px;
+    }
+    
+    .stock-item-info .code {
+        font-size: 10px;
+    }
+    
+    .stock-item-price,
+    .stock-item-change,
+    .stock-item-volume {
+        font-size: 11px;
+        min-width: 60px;
+    }
+    
+    .stock-item-volume {
+        display: none;
+    }
+    
+    .detail-quote {
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    
+    .quote-col {
+        min-width: 100px;
+        flex: 1 1 40%;
+    }
+    
+    .quote-label {
+        font-size: 11px;
+    }
+    
+    .quote-value {
+        font-size: 14px;
+    }
+    
+    .detail-price {
+        font-size: 24px;
+    }
+    
+    .detail-change {
+        font-size: 16px;
+    }
+    
+    .volume-change {
+        font-size: 12px;
+    }
+    
+    .trade-panel {
+        padding: 15px;
+    }
+    
+    .trade-input-group {
+        flex-direction: column;
+    }
+    
+    .trade-input-group input {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+    
+    .trade-buttons {
+        flex-direction: column;
+    }
+    
+    .trade-buttons button {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+    
+    .trade-buttons button:last-child {
+        margin-bottom: 0;
+    }
+    
+    .chart-container {
+        min-height: 160px;
+        max-height: 200px;
+    }
+    
+    .volume-chart-container {
+        min-height: 80px;
+        max-height: 100px;
+    }
+    
+    .achievement-wall {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+    
+    .achievement-item {
+        padding: 10px;
+    }
+    
+    .achievement-title {
+        font-size: 12px;
+    }
+    
+    .achievement-desc {
+        font-size: 10px;
+    }
+}
+
+/* 小型移动设备 (< 480px) */
+@media (max-width: 479px) {
+    .main-header {
+        padding: 8px 10px;
+    }
+    
+    .app-title {
+        font-size: 16px;
+    }
+    
+    .main-nav button {
+        padding: 6px 10px;
+        font-size: 12px;
+    }
+    
+    .portfolio-summary {
+        grid-template-columns: 1fr;
+    }
+    
+    .stock-list-header {
+        font-size: 10px;
+        padding: 6px;
+    }
+    
+    .stock-item {
+        padding: 6px;
+    }
+    
+    .stock-item-info {
+        min-width: 60px;
+    }
+    
+    .stock-item-info .name {
+        font-size: 12px;
+    }
+    
+    .stock-item-info .code {
+        font-size: 9px;
+    }
+    
+    .stock-item-price,
+    .stock-item-change {
+        font-size: 10px;
+        min-width: 50px;
+    }
+    
+    .detail-price {
+        font-size: 20px;
+    }
+    
+    .detail-change {
+        font-size: 14px;
+    }
+    
+    .volume-change {
+        font-size: 11px;
+    }
+    
+    .quote-col {
+        min-width: 80px;
+        flex: 1 1 45%;
+    }
+    
+    .quote-label {
+        font-size: 10px;
+    }
+    
+    .quote-value {
+        font-size: 12px;
+    }
+    
+    .chart-container {
+        min-height: 140px;
+        max-height: 180px;
+    }
+    
+    .volume-chart-container {
+        min-height: 70px;
+        max-height: 90px;
+    }
+    
+    .achievement-wall {
+        grid-template-columns: 1fr;
+    }
+}
+

@@ -1,0 +1,135 @@
+/* 自动交易页面 */
+.auto-trade-container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.auto-trade-panel {
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+    padding: 30px;
+}
+
+.auto-trade-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.auto-trade-header h2 {
+    margin: 0;
+}
+
+.auto-trade-status {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.status-indicator {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--text-secondary);
+    transition: all 0.3s;
+}
+
+.status-indicator.running {
+    background: var(--success-color);
+    animation: pulse 1.5s infinite;
+}
+
+.status-indicator.paused {
+    background: var(--warning-color);
+}
+
+.status-indicator.limit {
+    background: var(--danger-color);
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+.auto-trade-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 25px;
+}
+
+.auto-trade-tab {
+    flex: 1;
+    padding: 15px;
+    background: var(--bg-tertiary);
+    border: none;
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.auto-trade-tab.active {
+    background: var(--primary-color);
+    color: white;
+}
+
+.auto-trade-form {
+    display: none;
+}
+
+.auto-trade-form.active {
+    display: block;
+}
+
+/* 自动交易配置区域按钮样式 */
+.auto-trade-form .btn-secondary {
+    width: 100%;
+    padding: 14px 24px;
+    background: linear-gradient(135deg, var(--primary-color), #7c3aed);
+    border: none;
+    border-radius: 10px;
+    color: white;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s;
+    margin-top: 10px;
+}
+
+.auto-trade-form .btn-secondary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(88, 166, 255, 0.3);
+}
+
+.radio-group {
+    display: flex;
+    gap: 20px;
+}
+
+.condition-input-group {
+    display: flex;
+    gap: 10px;
+}
+
+.condition-input-group select {
+    flex: 0 0 100px;
+    padding: 10px 14px;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.condition-input-group select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+

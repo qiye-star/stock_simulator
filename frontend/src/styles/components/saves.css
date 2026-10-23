@@ -1,0 +1,146 @@
+/* 存档选择 */
+.save-container {
+    max-width: 600px;
+    margin: 80px auto;
+    padding: 40px;
+}
+
+.save-container .btn-primary,
+.save-container .btn-secondary {
+    width: 100%;
+    padding: 14px 24px;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s;
+    margin-top: 12px;
+}
+
+.save-container .btn-primary {
+    background: linear-gradient(135deg, var(--primary-color), #7c3aed);
+    color: white;
+}
+
+.save-container .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(88, 166, 255, 0.3);
+}
+
+.save-container .btn-secondary {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+}
+
+.save-container .btn-secondary:hover {
+    background: var(--border-color);
+}
+
+.save-container h2 {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.save-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 30px;
+}
+
+.save-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.save-item:hover {
+    border-color: var(--primary-color);
+    transform: translateX(5px);
+}
+
+.save-item.active {
+    border-color: var(--primary-color);
+    background: rgba(88, 166, 255, 0.1);
+}
+
+.save-info h4 {
+    margin-bottom: 5px;
+}
+
+.save-info p {
+    color: var(--text-secondary);
+    font-size: 14px;
+}
+
+.save-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.save-actions button {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.btn-enter {
+    background: var(--primary-color);
+    color: white;
+}
+
+.btn-rename {
+    background: var(--bg-tertiary);
+    color: var(--text-secondary);
+}
+
+.btn-rename:hover {
+    background: var(--border-color);
+    color: var(--text-primary);
+}
+
+.btn-delete {
+    background: var(--bg-tertiary);
+    color: var(--danger-color);
+}
+
+/* 查看自选按钮 */
+.watchlist-toggle {
+    margin: 15px 0;
+}
+
+.btn-watchlist {
+    width: 100%;
+    padding: 12px 20px;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-watchlist:hover {
+    background: var(--border-color);
+    color: var(--text-primary);
+}
+
+.btn-watchlist.active {
+    background: linear-gradient(135deg, var(--primary-color), #7c3aed);
+    border-color: var(--primary-color);
+    color: white;
+    box-shadow: 0 4px 12px rgba(88, 166, 255, 0.3);
+}
+

@@ -1,0 +1,50 @@
+/* 响应式设计 */
+@media (max-width: 1200px) {
+    .auto-trade-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .auto-trade-panel {
+        padding: 20px;
+    }
+    
+    .auto-trade-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+    
+    .auto-trade-tabs {
+        flex-direction: column;
+    }
+    
+    .auto-trade-stats {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+    
+    .auto-trade-stats .stat-value {
+        font-size: 20px;
+    }
+    
+    .auto-trade-actions {
+        flex-direction: column;
+    }
+    
+    .condition-input-group {
+        flex-direction: column;
+    }
+    
+    .condition-input-group select {
+        flex: none;
+        width: 100%;
+    }
+    
+    .radio-group {
+        flex-direction: column;
+        gap: 10px;
+    }
+}
+

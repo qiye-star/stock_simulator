@@ -1,0 +1,110 @@
+/* 新手引导 */
+.tutorial-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 3000;
+}
+
+.tutorial-overlay.active {
+    display: block;
+}
+
+.tutorial-highlight {
+    position: absolute;
+    border: 3px solid var(--primary-color);
+    border-radius: 8px;
+    box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.75);
+    transition: all 0.3s ease;
+    pointer-events: none;
+    z-index: 3000;
+}
+
+.tutorial-arrow {
+    position: absolute;
+    width: 0;
+    height: 0;
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+    border-bottom: 15px solid var(--primary-color);
+    z-index: 3002;
+    display: none;
+}
+
+.tutorial-tooltip {
+    position: absolute;
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    border: 2px solid var(--primary-color);
+    padding: 20px;
+    max-width: 320px;
+    min-width: 250px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    z-index: 3001;
+}
+
+.tutorial-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.tutorial-step-indicator {
+    font-size: 13px;
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.tutorial-tooltip p {
+    margin-bottom: 15px;
+    line-height: 1.7;
+    font-size: 15px;
+    color: var(--text-primary);
+    word-wrap: break-word;
+}
+
+.tutorial-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 10px;
+}
+
+.tutorial-actions button {
+    padding: 10px 24px;
+    font-size: 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.tutorial-actions .btn-primary {
+    background: var(--primary-color);
+    color: white;
+    border: none;
+}
+
+.tutorial-actions .btn-primary:hover {
+    background: var(--primary-hover);
+    transform: translateY(-1px);
+}
+
+.tutorial-actions .btn-text {
+    background: transparent;
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+}
+
+.tutorial-actions .btn-text:hover {
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+
+

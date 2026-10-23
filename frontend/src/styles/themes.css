@@ -1,0 +1,36 @@
+:root {
+    color-scheme: dark; /* 让原生控件（数字步进箭头、下拉箭头等）按深色渲染，融入暗色主题 */
+    --bg-primary: #0d1117;
+    --bg-secondary: #161b22;
+    --bg-tertiary: #21262d;
+    --text-primary: #c9d1d9;
+    --text-secondary: #8b949e;
+    --border-color: #30363d;
+    --up-color: #ff4d4f;
+    --down-color: #52c41a;
+    --primary-color: #58a6ff;
+    --warning-color: #faad14;
+    --danger-color: #ff4d4f;
+    --success-color: #52c41a;
+}
+
+
+/* 主题样式 - 浅色 */
+body.light-theme {
+    color-scheme: light; /* 浅色主题下原生控件按浅色渲染 */
+    --bg-primary: #f5f5f5;
+    --bg-secondary: #ffffff;
+    --bg-tertiary: #f0f0f0;
+    --text-primary: #333333;
+    --text-secondary: #666666;
+    --border-color: #e0e0e0;
+}
+
+/* 主题样式 - 节日 */
+body.festival-theme {
+    --bg-primary: #1a0a2e;
+    --bg-secondary: #2d1b4e;
+    --bg-tertiary: #432c7a;
+    --primary-color: #ffd700;
+}
+
