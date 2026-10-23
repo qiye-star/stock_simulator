@@ -19,6 +19,9 @@ services:
       DATABASE_URL: ${DATABASE_URL:-sqlite:////data/stocksim.db}
     volumes:
       - backend-data:/data
+    networks:
+      - default
+      - 1panel-network
     depends_on:
       postgres:
         condition: service_healthy
@@ -43,6 +46,9 @@ services:
       - backend-data:/data
     expose:
       - "8000"
+    networks:
+      - default
+      - 1panel-network
     depends_on:
       migrate:
         condition: service_completed_successfully
@@ -120,3 +126,10 @@ volumes:
   backend-data:
   postgres-data:
   mysql-data:
+
+# 1Panel 创建的外部网络：migrate/backend 加入后可直接用容器名连接 1Panel 里的数据库
+# （DATABASE_URL 主机名写 1Panel 数据库容器名）。服务器上需已存在该网络（装过 1Panel 即有）；
+# 本地没有 1Panel 时先执行：docker network create 1panel-network
+networks:
+  1panel-network:
+    external: true
