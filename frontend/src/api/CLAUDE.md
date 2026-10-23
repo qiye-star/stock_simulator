@@ -9,6 +9,7 @@
 ## 文件地图
 - `http.js` request/get/post/put/patch/del、ApiError、buildUrl
 - `endpoints.js` 每个端点一个函数，JSDoc 的响应 typedef 与 backend/src/stocksim/schemas 一一对应；列表接口返回 `{items, next_cursor}` 的需调用方取 `items`。错误文案统一用 `errorMessage(err, t)`（i18n/errors.js），不要在功能模块自建码表。
+- `endpoints.js` 的 `getMarket(saveId, query?)` query 全可选（limit/cursor/q/sort/order/watchlisted），不传即旧行为；`getEquityCurve`、`getIntraday` 为资产曲线与分时接口。
 - `ws.js` createReconnectingSocket、createSaveSocket、buildWsUrl
 - `endpoints.js` 全部端点
 

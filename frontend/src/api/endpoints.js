@@ -100,7 +100,45 @@ import { del, get, patch, post, put } from './http.js';
 
 /**
  * schemas/market.py MarketOut（GET /saves/{id}/market）
- * @typedef {ClockOut & { stocks: QuoteOut[] }} MarketOut
+ * @typedef {ClockOut & {
+ *   stocks: QuoteOut[],
+ *   total: number,
+ *   next_cursor: string | null,
+ * }} MarketOut total 为按 q/watchlisted 过滤后的总数（不受 limit/cursor 影响）；next_cursor 为 null 表示末页（不分页时恒为 null）
+ */
+
+/**
+ * getMarket 的可选查询参数（均可省略；全部不传时返回全部股票、股票池顺序）。
+ * @typedef {Object} MarketQuery
+ * @property {number} [limit] 1-500
+ * @property {string | null} [cursor] 不透明串，取自上一页 next_cursor（绑定 sort/order）
+ * @property {string} [q] 代码或名称子串，不区分大小写，<=32 字符
+ * @property {'code' | 'price' | 'change' | 'volume'} [sort]
+ * @property {'asc' | 'desc'} [order] 默认 code 升序，其余降序
+ * @property {boolean} [watchlisted] 按自选过滤
+ */
+
+/**
+ * schemas/market.py IntradayPointOut
+ * @typedef {Object} IntradayPointOut
+ * @property {number} minute 当日分钟数 0-1439（该 tick 完成后的游戏时钟）
+ * @property {number} tick 全局 tick 序号，与 WebSocket tick 消息对齐
+ * @property {number} price_cents
+ * @property {number} volume 当日累计成交量（股）
+ */
+
+/**
+ * schemas/market.py IntradayOut（GET /saves/{id}/market/{code}/intraday）
+ * @typedef {Object} IntradayOut
+ * @property {string} code
+ * @property {number} trading_day
+ * @property {string} date
+ * @property {number} clock_minute
+ * @property {number} tick
+ * @property {number} prev_close_cents
+ * @property {number} open_cents
+ * @property {IntradayPointOut[]} points 按时间升序；开盘前为空；休市分钟无点
+ * @property {boolean} exact false 表示无法精确重放（如调试改过时钟），points 退化为仅当前点
  */
 
 /**
@@ -137,6 +175,26 @@ import { del, get, patch, post, put } from './http.js';
  * @property {number} equity_cents
  * @property {number} net_pnl_cents
  * @property {HoldingOut[]} holdings
+ * @property {number} prev_equity_cents 昨日收盘权益
+ * @property {number} day_pnl_cents 当日盈亏 = 当前权益 - 昨日收盘权益
+ * @property {number} day_pnl_bp
+ */
+
+/**
+ * schemas/portfolio.py EquityPointOut
+ * @typedef {Object} EquityPointOut
+ * @property {number} trading_day 初始点为 -1
+ * @property {number} equity_cents
+ * @property {number} cash_cents
+ * @property {number} market_value_cents
+ * @property {'initial' | 'close' | 'live'} kind
+ */
+
+/**
+ * schemas/portfolio.py EquityCurveOut（GET /saves/{id}/equity-curve）
+ * @typedef {Object} EquityCurveOut
+ * @property {'7d' | '30d' | 'all'} range
+ * @property {EquityPointOut[]} items 按 trading_day 升序
  */
 
 /**
@@ -419,8 +477,23 @@ export const exportSave = (saveId) => get(`/saves/${saveId}/export`);
 
 /** ---------- 行情 ---------- */
 
-/** @param {Uuid} saveId @returns {Promise<MarketOut>} 全市场快照 */
-export const getMarket = (saveId) => get(`/saves/${saveId}/market`);
+/**
+ * 全市场快照；可选查询参数用于分页/搜索/排序/自选过滤，不传则行为与旧版一致（返回全部）。
+ * @param {Uuid} saveId
+ * @param {MarketQuery} [query]
+ * @returns {Promise<MarketOut>}
+ */
+export const getMarket = (saveId, query = {}) =>
+  get(`/saves/${saveId}/market`, {
+    query: {
+      limit: query.limit ?? undefined,
+      cursor: query.cursor ?? undefined,
+      q: query.q ?? undefined,
+      sort: query.sort ?? undefined,
+      order: query.order ?? undefined,
+      watchlisted: query.watchlisted ?? undefined,
+    },
+  });
 
 /**
  * 单只股票：QuoteOut + 日 K（candles）+ 五档（order_book）。
@@ -429,6 +502,14 @@ export const getMarket = (saveId) => get(`/saves/${saveId}/market`);
  * @returns {Promise<StockMarketOut>}
  */
 export const getStockMarket = (saveId, code) => get(`/saves/${saveId}/market/${encodeURIComponent(code)}`);
+
+/**
+ * 当日分时：从开盘到当前时钟的逐 tick 价格（服务端确定性重放）。
+ * @param {Uuid} saveId
+ * @param {string} code
+ * @returns {Promise<IntradayOut>}
+ */
+export const getIntraday = (saveId, code) => get(`/saves/${saveId}/market/${encodeURIComponent(code)}/intraday`);
 
 /** ---------- 时钟 ---------- */
 
@@ -458,6 +539,14 @@ export const listTrades = (saveId, query = {}) =>
 
 /** @param {Uuid} saveId @returns {Promise<PortfolioOut>} */
 export const getPortfolio = (saveId) => get(`/saves/${saveId}/portfolio`);
+
+/**
+ * 资产曲线（initial 起点 + 各日 close + 当日 live）。
+ * @param {Uuid} saveId
+ * @param {'7d' | '30d' | 'all'} [range] 默认 30d
+ * @returns {Promise<EquityCurveOut>}
+ */
+export const getEquityCurve = (saveId, range = '30d') => get(`/saves/${saveId}/equity-curve`, { query: { range } });
 
 /** ---------- 自选 ---------- */
 
