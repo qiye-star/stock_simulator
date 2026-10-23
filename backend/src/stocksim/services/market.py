@@ -9,20 +9,31 @@
 
 并发：每次推进都修改 saves 行（tick / last_tick_at），由 saves.version 乐观锁保护；
 冲突（StaleDataError）时回滚、刷新存档并重算。
+
+跨交易日的并发补推还会撞上 candles / equity_snapshots 的唯一约束：另一事务已提交同一交易日的
+收盘数据，本事务的写入就抛 IntegrityError（SQLite 立即抛；PostgreSQL 在对方提交后抛）。
+这与 StaleDataError 同属“他人已推进”，由 `_retrying` 一并处理：回滚、重读最新存档后重算，
+此时 last_tick_at 已被推进，通常无事可做（n=0）而正常返回。写入本身不做 insert-or-ignore：
+忽略冲突会让本事务带着过期的行情 payload 继续提交，必须整体回滚重算才正确，且避免方言分支。
 """
 
 from __future__ import annotations
 
+import base64
+import binascii
+import json
 import uuid
 from collections.abc import Callable, Mapping
 from datetime import date, timedelta
 from typing import Any
 
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from sqlalchemy.orm.exc import StaleDataError
 
 from stocksim.core.config import get_settings
+from stocksim.core.errors import AppError, ErrorCode
 from stocksim.db.base import utcnow
 from stocksim.domain.clock import (
     TICKS_PER_TRADING_DAY,
@@ -36,7 +47,8 @@ from stocksim.domain.market_engine import advance, find_stock, init_market, orde
 from stocksim.domain.money import BP_DENOMINATOR, round_half_up_div
 from stocksim.domain.rules import limit_down_cents, limit_up_cents
 from stocksim.models import Candle, MarketState, Save, User, WatchlistItem
-from stocksim.services.stocks import industry_ranges, stock_pool
+from stocksim.services.equity import holding_quantities, record_close_snapshot
+from stocksim.services.stocks import get_stock_info, industry_ranges, stock_pool
 
 META_KEY = "_meta"
 MAX_ATTEMPTS = 3
@@ -212,6 +224,7 @@ def _run_ticks(db: Session, save: Save, n: int) -> None:
     state = decode_state(row.payload, prior)
     seed = save.market_seed
     minute, tick = save.clock_minute, save.tick
+    quantities: dict[str, int] | None = None
     for _ in range(n):
         minute = advance_minute(minute)
         tick += 1
@@ -220,6 +233,10 @@ def _run_ticks(db: Session, save: Save, n: int) -> None:
         state = advance(state, seed, tick, minute)
         if rolls:
             _persist_closed_day(db, save.id, closing_day, state)
+            # 收盘权益快照（资产曲线）；持仓在批次内不变，只在首次跨日时读取
+            if quantities is None:
+                quantities = holding_quantities(db, save.id)
+            record_close_snapshot(db, save, closing_day, state, quantities, tick)
     row.payload = encode_payload(state, as_of)
     save.tick = tick
     save.clock_minute = minute
@@ -227,11 +244,12 @@ def _run_ticks(db: Session, save: Save, n: int) -> None:
 
 
 def _retrying[T](db: Session, save: Save, action: Callable[[], T]) -> T:
-    """乐观锁冲突时回滚、刷新存档后重试 action（action 必须从当前库状态重新计算）。"""
+    """乐观锁冲突（StaleDataError）或并发写同一交易日收盘数据（IntegrityError）时，
+    回滚、刷新存档后重试 action（action 必须从当前库状态重新计算）。"""
     for attempt in range(MAX_ATTEMPTS):
         try:
             return action()
-        except StaleDataError:
+        except (StaleDataError, IntegrityError):
             db.rollback()
             db.refresh(save)
             if attempt == MAX_ATTEMPTS - 1:
@@ -272,8 +290,9 @@ def advance_to_now(db: Session, save: Save) -> int:
     """
     try:
         return _retrying(db, save, lambda: _advance_to_now_once(db, save))
-    except StaleDataError:
-        return 0  # 另一个请求已推进到同一时刻附近，本次无需再推
+    except (StaleDataError, IntegrityError):
+        # 另一个请求已推进（并写入了同一交易日的收盘数据），本次无需再推；_retrying 已回滚并刷新存档
+        return 0
 
 
 def _advance_ticks_once(db: Session, save: Save, n: int) -> int:
@@ -333,14 +352,200 @@ def clock_view(save: Save, *, skipped_ticks: int = 0) -> dict[str, Any]:
     }
 
 
-def market_overview(db: Session, save: Save) -> dict[str, Any]:
+# 列表排序键：取值函数（对 domain 行情状态里的个股 dict）
+_SORT_VALUES: dict[str, Callable[[Mapping[str, Any]], int]] = {
+    "code": lambda s: int(s["code"]),  # 股票代码均为 6 位数字
+    "price": lambda s: int(s["price"]),
+    "volume": lambda s: int(s["daily_volume"]),
+    "change": lambda s: _change_bp(s),
+}
+DEFAULT_ORDER = {"code": "asc", "price": "desc", "volume": "desc", "change": "desc"}
+
+
+def _change_bp(stock: Mapping[str, Any]) -> int:
+    prev = int(stock["prev_close"])
+    if prev <= 0:
+        return 0
+    return round_half_up_div((int(stock["price"]) - prev) * BP_DENOMINATOR, prev)
+
+
+def _sort_key(sort: str, order: str, stock: Mapping[str, Any]) -> tuple[int, str]:
+    """排序键：主键按 order 升/降，并列恒按代码升序，保证全序（游标可定位）。"""
+    value = _SORT_VALUES[sort](stock)
+    return (value if order == "asc" else -value, str(stock["code"]))
+
+
+def _encode_cursor(sort: str, order: str, stock: Mapping[str, Any]) -> str:
+    raw = json.dumps([sort, order, _SORT_VALUES[sort](stock), stock["code"]], separators=(",", ":"))
+    return base64.urlsafe_b64encode(raw.encode()).decode().rstrip("=")
+
+
+def _decode_cursor(cursor: str, sort: str, order: str) -> tuple[int, str]:
+    """返回游标的排序键；格式非法或与当前 sort/order 不一致 → VALIDATION_ERROR(field=cursor)。"""
+    try:
+        padded = cursor + "=" * (-len(cursor) % 4)
+        c_sort, c_order, value, code = json.loads(base64.urlsafe_b64decode(padded.encode()))
+        if (
+            c_sort != sort
+            or c_order != order
+            or isinstance(value, bool)
+            or not isinstance(value, int)
+            or not isinstance(code, str)
+        ):
+            raise ValueError
+    except (ValueError, TypeError, binascii.Error, UnicodeDecodeError) as exc:
+        raise AppError(ErrorCode.VALIDATION_ERROR, {"field": "cursor"}) from exc
+    return (value if order == "asc" else -value, code)
+
+
+def market_overview(
+    db: Session,
+    save: Save,
+    *,
+    limit: int | None = None,
+    cursor: str | None = None,
+    q: str | None = None,
+    sort: str | None = None,
+    order: str | None = None,
+    watchlisted: bool | None = None,
+) -> dict[str, Any]:
+    """全市场快照。不带任何查询参数时返回全部股票（顺序为股票池顺序，向后兼容）。
+
+    过滤：q 为代码/名称子串（不区分大小写），watchlisted 为 True/False 时按自选过滤。
+    排序：显式给出 sort/order 时按 (主键, 代码) 全序；分页用键集游标（见 CONTRACT）。
+    total 为过滤后的总数，next_cursor 为 None 表示已到末页。
+    """
     state, _ = load_market(db, save)
     watched = watch_codes(db, save.id)
+    stocks = state["stocks"]
+    needle = (q or "").strip().casefold()
+    if needle:
+        stocks = [s for s in stocks if needle in s["code"] or needle in s["name"].casefold()]
+    if watchlisted is not None:
+        stocks = [s for s in stocks if (s["code"] in watched) == watchlisted]
+    total = len(stocks)
+
+    next_cursor: str | None = None
+    if any(v is not None for v in (limit, cursor, sort, order)):
+        sort = sort or "code"
+        eff_order = order or DEFAULT_ORDER[sort]
+        stocks = sorted(stocks, key=lambda s: _sort_key(sort, eff_order, s))
+        if cursor is not None:
+            after = _decode_cursor(cursor, sort, eff_order)
+            stocks = [s for s in stocks if _sort_key(sort, eff_order, s) > after]
+        if limit is not None and len(stocks) > limit:
+            stocks = stocks[:limit]
+            next_cursor = _encode_cursor(sort, eff_order, stocks[-1])
     return {
         **clock_view(save),
-        "stocks": [
-            _quote(s, s["code"] in state["breaker"], s["code"] in watched) for s in state["stocks"]
-        ],
+        "total": total,
+        "next_cursor": next_cursor,
+        "stocks": [_quote(s, s["code"] in state["breaker"], s["code"] in watched) for s in stocks],
+    }
+
+
+# ---------- 个股当日分时 ----------
+
+
+def _day_ticks(save: Save, count: int) -> list[tuple[int, int]]:
+    """从存档当前时钟倒推最近 count 个交易 tick 的 (global_tick, minute)，按时间升序。
+
+    每个 tick 恰好前进 1 分钟；只有落在交易时段的分钟才是交易 tick（见 _run_ticks）。
+    """
+    out: list[tuple[int, int]] = []
+    minute, tick = save.clock_minute, save.tick
+    while len(out) < count and tick > 0:
+        if is_trading_time(minute):
+            out.append((tick, minute))
+        minute = (minute - 1) % 1440
+        tick -= 1
+    out.reverse()
+    return out
+
+
+def intraday(db: Session, save: Save, code: str) -> dict[str, Any] | None:
+    """个股当日分时：由确定性引擎从当日开盘价重放，无需额外存储。
+
+    当日已处理的交易 tick 数 = trading_tick - 20*day（第 1 日起首个 tick 即换日 tick，+1）。
+    重放用 domain.advance（单只股票状态，RNG 维度仍用其 stock_idx 与全局 tick），
+    并校验终点价格/成交量与持久化状态一致；不一致（调试改过时钟等）时退化为仅含当前点。
+    """
+    row = _market_row(db, save)
+    as_of, trading_tick = _meta(row.payload)
+    info = get_stock_info(code)
+    if info is None:
+        return None
+    day = trading_tick // TICKS_PER_TRADING_DAY
+    raw = [int(v) for v in row.payload[code]]
+    price, prev_close, open_, _high, _low, daily, prev_daily, _avg, _cd = raw
+    processed = trading_tick - TICKS_PER_TRADING_DAY * day + (1 if day >= 1 else 0)
+    ticks = _day_ticks(save, processed)
+
+    points: list[dict[str, int]] = []
+    ok = len(ticks) == processed
+    if ok and ticks:
+        stock = {
+            "code": info.code,
+            "name": info.name,
+            "industry": info.industry,
+            "profile": info.profile,
+            "stock_idx": info.idx,
+            "price": open_,
+            "prev_close": open_,
+            "open": open_,
+            "high": open_,
+            "low": open_,
+            # 换日 tick 会把 daily_volume 滚入 prev_daily_volume；第 0 日则直接取持久化值
+            "volume": prev_daily if day >= 1 else 0,
+            "daily_volume": prev_daily if day >= 1 else 0,
+            "prev_daily_volume": prev_daily,
+            "avg_volume": 0,
+            "history": [
+                {
+                    "date": "2000-01-01",
+                    "open": open_,
+                    "high": open_,
+                    "low": open_,
+                    "close": open_,
+                    "volume": prev_daily,
+                }
+            ],
+        }
+        sim = {
+            "trading_tick": TICKS_PER_TRADING_DAY * day - (1 if day >= 1 else 0),
+            "trading_day": day,
+            "breaker": {},
+            "stocks": [stock],
+        }
+        for tick, minute in ticks:
+            sim = advance(sim, save.market_seed, tick, minute)
+            cur = sim["stocks"][0]
+            points.append(
+                {
+                    "minute": minute,
+                    "tick": tick,
+                    "price_cents": int(cur["price"]),
+                    "volume": int(cur["daily_volume"]),
+                }
+            )
+        ok = points[-1]["price_cents"] == price and points[-1]["volume"] == daily
+    if not ok:
+        last = ticks[-1][0] if ticks else save.tick
+        points = (
+            [{"minute": save.clock_minute, "tick": last, "price_cents": price, "volume": daily}]
+            if processed > 0
+            else []
+        )
+    return {
+        "code": code,
+        "trading_day": day,
+        "date": _day_iso(as_of, day),
+        "clock_minute": save.clock_minute,
+        "tick": save.tick,
+        "prev_close_cents": prev_close,
+        "open_cents": open_,
+        "points": points,
+        "exact": ok,
     }
 
 
@@ -464,6 +669,7 @@ __all__ = [
     "decode_state",
     "encode_payload",
     "init_market_for_save",
+    "intraday",
     "load_market",
     "market_overview",
     "pause_clock",

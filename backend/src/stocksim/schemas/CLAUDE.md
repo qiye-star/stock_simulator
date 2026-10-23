@@ -14,8 +14,8 @@
 ## 文件地图
 - `auth.py` RegisterIn、LoginIn、PasswordChangeIn。`user.py` UserOut、MePatch。
 - `stocks.py` StockOut。`saves.py` SaveCreateIn、SaveUpdateIn、SaveOut。
-- `market.py` QuoteOut、ClockOut、MarketOut、StockMarketOut（日 K 与五档）。
-- `orders.py` OrderIn、TradeOut、OrderOut、TradePageOut。`portfolio.py` HoldingOut、PortfolioOut。
+- `market.py` QuoteOut、ClockOut、MarketOut（含 total、next_cursor）、StockMarketOut（日 K 与五档）、IntradayOut（当日分时）。
+- `orders.py` OrderIn、TradeOut、OrderOut、TradePageOut。`portfolio.py` HoldingOut、PortfolioOut（含 prev_equity/day_pnl）、EquityPointOut、EquityCurveOut。
 - `achievements.py` AchievementDefOut、SaveAchievementOut。
 
 ## 验证

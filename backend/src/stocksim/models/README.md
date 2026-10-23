@@ -1,6 +1,6 @@
 # models 目录说明
 
-SQLAlchemy 2.0 ORM 模型，定义数据库的 15 张表。导入 `stocksim.models` 即把全部表注册到 `Base.metadata`，供 Alembic 与测试使用。
+SQLAlchemy 2.0 ORM 模型，定义数据库的 16 张表。导入 `stocksim.models` 即把全部表注册到 `Base.metadata`，供 Alembic 与测试使用。
 
 ## 文件
 | 文件 | 表 |

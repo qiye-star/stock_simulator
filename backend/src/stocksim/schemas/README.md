@@ -8,9 +8,9 @@
 | `user.py` | 用户响应 `UserOut`；偏好修改 `MePatch` |
 | `stocks.py` | 股票目录 `StockOut` |
 | `saves.py` | 存档创建/改名请求；存档响应 `SaveOut` |
-| `market.py` | 行情快照、时钟、个股日 K 与五档 |
+| `market.py` | 行情快照（含 total/next_cursor）、时钟、个股日 K 与五档、当日分时 |
 | `orders.py` | 下单请求 `OrderIn`；成交 `TradeOut`；下单结果 `OrderOut`；成交分页 |
-| `portfolio.py` | 持仓与资产 |
+| `portfolio.py` | 持仓与资产（含当日盈亏）、资产曲线 |
 | `achievements.py` | 成就定义与已解锁项 |
 
 字段约定：金额为整数分（`*_cents`），时间为 ISO 8601 UTC。

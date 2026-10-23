@@ -12,6 +12,7 @@
 | `clock.py` | `POST /saves/{id}/clock/pause｜resume｜skip` | 游戏时钟 |
 | `orders.py` | `POST /saves/{id}/orders`、`GET /saves/{id}/trades?cursor=` | 下单（可选 `Idempotency-Key`）与成交流水 |
 | `portfolio.py` | `GET /saves/{id}/portfolio` | 资产与持仓 |
+| `portfolio.py` | `GET /saves/{id}/equity-curve?range=7d\|30d\|all` | 资产曲线 |
 | `watchlist.py` | `PUT/DELETE /saves/{id}/watchlist/{code}` | 自选股（幂等） |
 | `__init__.py` | — | 自动发现并汇总为 `api_router` |
 | `auto_trade.py` | `/saves/{id}/auto-trade/configs`（CRUD）、`…/start｜pause｜resume｜stop｜reset`、`…/status`、`…/events?cursor=` | 自动交易 |

@@ -10,7 +10,7 @@
 - 写操作在服务内 `commit`；失败 `rollback` 并转换为 AppError。
 - 行情：`market_states.payload` 为 `{code: [9 项]}` + 保留键 `_meta`（trading_tick、as_of）。history 不落 payload；收盘日 K 在交易日切换时追加到 candles；当日 K 由状态派生。
 - 推进只在 `market.py` 的 `_run_ticks` 中发生。`advance_to_now` 按 refresh_rate 补推（上限 TICK_CATCHUP_MAX，暂停不推进）；`advance_ticks(db, save, n)` 立即推进（跳过、调试）。
-- 乐观锁：`saves.version`。推进/下单冲突（StaleDataError）→ 回滚、刷新存档、重算。
+- 乐观锁：`saves.version`。推进/下单冲突（StaleDataError）→ 回滚、刷新存档、重算。跨交易日并发补推时，收盘 candles / equity_snapshots 撞唯一约束（IntegrityError）同样由 `market._retrying` 回滚重算（重读后 last_tick_at 已被他人推进，通常无事可做）；不要改成 insert-or-ignore，否则会带着过期 payload 提交。
 - 下单 `trading.place_order(...) -> Trade` 是手动与自动交易共用入口，签名固定；`place_order_detailed` 额外返回新解锁成就与幂等回放标记。
 - 成交快照：trades 保存 prev_close、fund_before、tick、trading_day、clock_minute；统计只读快照。
 - 每个存档最多 10 个（`MAX_SAVES_PER_USER`）。
@@ -18,9 +18,10 @@
 ## 文件地图
 - `stocks.py` 股票池静态数据（data/*.json）与 stocks 表查询；`stock_pool()` 顺序即 stock_idx。
 - `seed.py` 股票表幂等种子；`seed_on_startup` 由 main 的 lifespan 调用（失败只记日志）。
-- `market.py` 行情编解码、advance_to_now / advance_ticks、行情与个股视图、暂停/继续/跳过、新存档初始化。
+- `market.py` 行情编解码、advance_to_now / advance_ticks、行情与个股视图、暂停/继续/跳过、新存档初始化。`market_overview` 支持 limit/cursor/q/sort/order/watchlisted（无参=全部，键集游标，全序为 (主键, 代码)）；`intraday` 不落库，由当日开盘价 + save.market_seed + 全局 tick 用 `domain.advance`（单只股票状态）逐 tick 重放，并校验终点与持久化价格/量一致，否则 `exact=false` 退化。
 - `trading.py` 下单（place_order / place_order_detailed）、持仓同步、统计快照、成交分页、幂等键。
 - `portfolio.py` 资产与持仓估值（可卖股数来自当日成交）。
+- `equity.py` 收盘权益快照（`record_close_snapshot` 在 `market._run_ticks` 交易日切换时幂等 upsert）与 `equity_curve`（初始点+快照+实时点）。portfolio 的当日盈亏由当日成交倒推昨收权益。
 - `achievements.py` 成就目录、已解锁列表、成交后判定落库（record_unlocks）。
 - `saves.py` 存档 CRUD、导出（JSON）、自选增删、`open_save`。
 - `auth.py` 账号与会话（既有）。

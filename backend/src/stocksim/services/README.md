@@ -7,9 +7,10 @@
 | `auth.py` | 账号与会话：注册、登录、登出、改密、偏好设置、注销账号 |
 | `stocks.py` | 股票池静态数据读取（`stock_pool()` 顺序即 stock_idx）、stocks 表查询 |
 | `seed.py` | 股票表幂等种子，启动时调用 |
-| `market.py` | 行情推进（挂钟补推、跳过）、行情与个股视图、暂停/继续/跳过时钟、新存档行情初始化 |
+| `market.py` | 行情推进（挂钟补推、跳过）、行情列表（分页/搜索/排序/键集游标）与个股视图、个股当日分时（确定性重放）、暂停/继续/跳过时钟、新存档行情初始化 |
 | `trading.py` | 下单（手动与自动共用）、持仓同步、成交流水分页、Idempotency-Key |
-| `portfolio.py` | 资产与持仓估值、T+1 可卖股数 |
+| `portfolio.py` | 资产与持仓估值、T+1 可卖股数、当日盈亏 |
+| `equity.py` | 收盘权益快照（幂等 upsert；并发冲突由 `market._retrying` 回滚重算）与资产曲线 |
 | `achievements.py` | 成就目录、已解锁列表、成交后判定落库 |
 | `saves.py` | 存档 CRUD、归属校验 `open_save`、导出、自选 |
 

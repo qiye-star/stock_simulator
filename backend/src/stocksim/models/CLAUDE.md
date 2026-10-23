@@ -1,6 +1,6 @@
 # models/ — ORM 模型与列规格（权威）
 
-SQLAlchemy 2.0 typed 模型，共 15 张表。以下为定稿列规格；与代码不一致时以代码 + `alembic check` 为准并回填此表。
+SQLAlchemy 2.0 typed 模型，共 16 张表。以下为定稿列规格；与代码不一致时以代码 + `alembic check` 为准并回填此表。
 
 ## 约定
 - 类型缩写：`uuid`=Uuid；`str(n)`=String(n)；`int`/`big`=Integer/BigInteger；`money`=Money（整数分，允许负数）；`ts`=UTCDateTime（UTC）；`num(8,6)`=Numeric；`json`=JSON/JSONB。`?`=可空；`=x`=默认值。
@@ -27,6 +27,7 @@ SQLAlchemy 2.0 typed 模型，共 15 张表。以下为定稿列规格；与代�
 | candles (PK id; UQ save_id+stock_code+trading_day; FK CASCADE; IX save_id) | id:uuid, save_id:uuid, stock_code:str6, trading_day:int, open_cents/high_cents/low_cents/close_cents:money, volume:big |
 | auto_trade_configs (PK id; UQ save_id+stock_code+direction; CHECK 枚举见下; FK CASCADE; IX save_id) | id:uuid, save_id:uuid, stock_code:str6, direction:str4∈{buy,sell}, condition_type:str12∈{price,percentage,profit,time}, condition_operator:str8∈{above,below,equal}, condition_value_cents:money?（price/profit 阈值，分）, condition_pct100:int?（percentage 阈值×100）, quantity:int>0, price_type:str8=market, limit_price_cents:money?, stop_loss_pct100:int?, take_profit_pct100:int?, max_trades:int=0, max_amount_cents:money?, enabled:bool=true, created_at:ts, updated_at:ts |
 | auto_trade_events (PK id; IX save_id+created_at; FK save_id CASCADE, config_id→auto_trade_configs SET NULL) | id:uuid, save_id:uuid, config_id:uuid?, stock_code:str6, direction:str4, condition_type:str12, success:bool, message:str255, amount_cents:money=0, pnl_cents:money=0, pnl_pct100:int?, buy_price_cents:money?, sell_price_cents:money?, tick:big, trading_day:int, created_at:ts |
+| equity_snapshots (PK id; UQ save_id+trading_day; FK save_id CASCADE; IX save_id) | id:uuid, save_id:uuid, trading_day:int, equity_cents:money, cash_cents:money, market_value_cents:money, tick:big, created_at:ts（交易日收盘权益，services/equity.py 幂等 upsert） |
 
 ## market_states.payload
 `{code: [price, prev_close, open, high, low, daily_vol, prev_daily_vol, avg_vol, cb_cooldown], "_meta": {"trading_tick": int, "as_of": "YYYY-MM-DD"}}`：价格为整数分，成交量为股数，`cb_cooldown` 为剩余熔断冷却 tick 数。

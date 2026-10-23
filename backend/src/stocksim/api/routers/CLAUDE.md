@@ -16,7 +16,7 @@
 - `auth.py` 注册、登录、登出、改密。`me.py` 偏好与注销。
 - `stocks.py` `GET /stocks`。`achievements.py` 目录与存档已解锁列表。
 - `saves.py` 存档 CRUD 与导出。`market.py` 全市场与个股详情。`clock.py` 暂停/继续/跳过。
-- `orders.py` 下单（Idempotency-Key）与成交流水（cursor 分页）。`portfolio.py` 资产持仓。`watchlist.py` 自选增删。
+- `orders.py` 下单（Idempotency-Key）与成交流水（cursor 分页）。`portfolio.py` 资产持仓与 `equity-curve` 资产曲线。`watchlist.py` 自选增删。
 - `__init__.py` 自动汇总为 `api_router`。
 
 ## 验证

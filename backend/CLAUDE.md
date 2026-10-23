@@ -19,7 +19,7 @@ FastAPI + SQLAlchemy 2（同步）+ Alembic，uv 管理，Python 3.12。契约�
 - `src/stocksim/main.py` — `create_app(settings, engine=)` 应用工厂；`run()` 为 `stocksim` 命令。
 - `src/stocksim/core/` — 配置、错误码、密码/会话 token。
 - `src/stocksim/db/` — Base 与命名约定、Money/UTCDateTime/JSON 类型、引擎与 `get_db`。
-- `src/stocksim/models/` — 15 张表（字段权威表见 `models/CLAUDE.md`）。
+- `src/stocksim/models/` — 16 张表（字段权威表见 `models/CLAUDE.md`）。
 - `src/stocksim/schemas/` · `services/` · `api/`（deps、routers）。
 - `alembic/` 迁移；`tests/conftest.py` 夹具；`tests/integration/` 接口测试。
 

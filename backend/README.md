@@ -30,7 +30,7 @@ uv run ruff check .
 | `src/stocksim/main.py` | 应用工厂 `create_app`、生命周期、路由挂载 |
 | `src/stocksim/core/` | 配置、错误码与错误处理器、密码与会话工具 |
 | `src/stocksim/db/` | 声明式基类、自定义列类型、引擎与 `get_db` |
-| `src/stocksim/models/` | 15 张表的 ORM 模型 |
+| `src/stocksim/models/` | 16 张表的 ORM 模型 |
 | `src/stocksim/schemas/` | 请求/响应的 Pydantic 模型 |
 | `src/stocksim/services/` | 业务服务（当前：账号与会话） |
 | `src/stocksim/api/` | 依赖注入与路由 |

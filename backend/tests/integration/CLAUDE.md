@@ -15,6 +15,8 @@
 - `test_health.py` 存活/就绪。`test_errors.py` 错误契约。`test_auth.py` 认证。`test_me.py` 当前用户。
 - `test_saves.py` 存档生命周期、归属、时钟、种子、成就目录。
 - `test_market.py` 行情视图、补推、暂停、跨日、自选。
+- `test_market_list_intraday.py` 行情列表分页/搜索/排序/自选过滤（含游标）与个股当日分时（逐 tick 对拍、跳过/午休/换日、降级）。
+- `test_concurrent_rollover.py` 并发请求跨交易日补推（线程并发 + 确定性过期会话冲突）：无 500、K线/快照每日一行、与串行一致。
 - `test_orders.py` 下单规则、T+1、幂等、分页、成就。
 - `test_portfolio.py` 持仓与盈亏。
 

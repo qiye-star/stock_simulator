@@ -31,6 +31,8 @@ class ClockOut(BaseModel):
 
 class MarketOut(ClockOut):
     stocks: list[QuoteOut]
+    total: int  # 过滤（q/watchlisted）后的总数，不受 limit/cursor 影响
+    next_cursor: str | None = None  # None 表示已到末页（不分页时恒为 None）
 
 
 class CandleOut(BaseModel):
@@ -56,3 +58,22 @@ class OrderBookOut(BaseModel):
 class StockMarketOut(QuoteOut):
     candles: list[CandleOut]
     order_book: OrderBookOut
+
+
+class IntradayPointOut(BaseModel):
+    minute: int  # 当日分钟数（0-1439），即该 tick 完成后的游戏时钟
+    tick: int  # 全局 tick 序号，与 WebSocket tick 消息的 tick 对齐
+    price_cents: int
+    volume: int  # 引擎 daily_volume（与市场列表 volume 同口径），不保证单调
+
+
+class IntradayOut(BaseModel):
+    code: str
+    trading_day: int
+    date: str
+    clock_minute: int
+    tick: int
+    prev_close_cents: int
+    open_cents: int
+    points: list[IntradayPointOut]  # 按时间升序；开盘前为空；休市分钟无点
+    exact: bool  # False 表示无法精确重放（如调试改过时钟），points 退化为仅当前点
