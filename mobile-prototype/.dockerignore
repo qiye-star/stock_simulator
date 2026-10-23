@@ -1,0 +1,11 @@
+# 开发服务器、部署片段（模板由 Dockerfile 显式 COPY）与文档不进镜像内容
+dev-server.mjs
+**/*.md
+.git
+.gitignore
+node_modules
+.env
+.env.*
+**/*Zone.Identifier
+Dockerfile
+.dockerignore

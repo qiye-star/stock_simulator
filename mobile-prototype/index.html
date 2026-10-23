@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#0a0b0d" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="format-detection" content="telephone=no" />
+    <title>股市模拟器 · 移动端</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230a0b0d'/%3E%3Cpath d='M7 21l6-6 4 4 8-8' fill='none' stroke='%233ddbb0' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
+    <link rel="stylesheet" href="css/tokens.css" />
+    <link rel="stylesheet" href="css/base.css" />
+    <link rel="stylesheet" href="css/components.css" />
+    <link rel="stylesheet" href="css/pages.css" />
+  </head>
+  <body>
+    <div class="app">
+      <main id="view" class="view" tabindex="-1"></main>
+      <div id="dock" class="dock"></div>
+    </div>
+
+    <noscript><p style="padding:24px">此原型需要启用 JavaScript。</p></noscript>
+
+    <!-- 经典脚本（非 module），以支持 file:// 直接打开；顺序即依赖顺序 -->
+    <script src="js/lib/html.js"></script>
+    <script src="js/lib/format.js"></script>
+    <script src="js/mock/data.js"></script>
+    <script src="js/lib/store.js"></script>
+    <script src="js/lib/api.js"></script>
+    <script src="js/lib/store.real.js"></script>
+    <script src="js/lib/chart.js"></script>
+    <script src="js/lib/router.js"></script>
+    <script src="js/components/count-up.js"></script>
+    <script src="js/components/effects.js"></script>
+    <script src="js/components/dock.js"></script>
+    <script src="js/components/sheet.js"></script>
+    <script src="js/components/swipe-row.js"></script>
+    <script src="js/components/order-sheet.js"></script>
+    <script src="js/pages/market.js"></script>
+    <script src="js/pages/stock.js"></script>
+    <script src="js/pages/portfolio.js"></script>
+    <script src="js/pages/auto.js"></script>
+    <script src="js/pages/me.js"></script>
+    <script src="js/pages/login.js"></script>
+    <script src="js/app.js"></script>
+  </body>
+</html>

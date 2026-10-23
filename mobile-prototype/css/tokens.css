@@ -1,0 +1,84 @@
+/*
+ * 设计令牌（唯一的颜色来源）
+ * 规则：
+ *   - 背景 3 层冷灰、文字 3 级白灰、边框 6% 透明白；
+ *   - 唯一品牌强调色：青绿 --accent，仅用于主按钮、选中态、光晕；
+ *   - 红涨绿跌（A 股习惯）只用于行情数据：价格、涨跌幅、K 线、盈亏；
+ *   - 其它任何地方都不得出现新的颜色，组件里只能引用这里的变量。
+ */
+:root {
+  color-scheme: dark;
+
+  /* 背景三层：页面 / 卡片 / 浮层与输入 */
+  --bg-0: #0a0b0d;
+  --bg-1: #111317;
+  --bg-2: #181b20;
+  --bg-glass: rgba(17, 19, 23, 0.86); /* bg-1 半透明，用于毛玻璃 Dock */
+
+  /* 文字三级 */
+  --text-1: #f2f4f7;
+  --text-2: #9aa1ab;
+  --text-3: #5d636c;
+
+  /* 边框与分隔 */
+  --line: rgba(255, 255, 255, 0.06);
+  --line-strong: rgba(255, 255, 255, 0.1);
+  --hover: rgba(255, 255, 255, 0.04);
+  --press: rgba(255, 255, 255, 0.07);
+
+  /* 唯一强调色 */
+  --accent: #3ddbb0;
+  --accent-ink: #04140f; /* 强调色按钮上的文字 */
+  --accent-soft: rgba(61, 219, 176, 0.12);
+  --accent-glow: rgba(61, 219, 176, 0.22);
+  --accent-faint: rgba(61, 219, 176, 0.07);
+
+  /* 行情专用：红涨绿跌 */
+  --up: #f6465d;
+  --down: #2ebd85;
+  --flat: var(--text-2);
+  --up-soft: rgba(246, 70, 93, 0.12);
+  --down-soft: rgba(46, 189, 133, 0.12);
+
+  /* 遮罩 */
+  --scrim: rgba(0, 0, 0, 0.56);
+
+  /* 字体：数字使用等宽数字特性 */
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "HarmonyOS Sans SC",
+    "MiSans", "Microsoft YaHei", "Segoe UI", Roboto, sans-serif;
+  --font-num: "SF Pro Display", "Inter", "DIN Alternate", -apple-system, "Segoe UI", Roboto, sans-serif;
+
+  /* 字号 */
+  --fs-xs: 11px;
+  --fs-sm: 13px;
+  --fs-md: 15px;
+  --fs-lg: 17px;
+  --fs-xl: 22px;
+  --fs-2xl: 30px;
+  --fs-3xl: 38px;
+
+  /* 间距与圆角 */
+  --gutter: 16px;
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 18px;
+  --r-xl: 24px;
+
+  /* 尺寸 */
+  --tap: 44px; /* 最小触控尺寸 */
+  --dock-h: 60px;
+  --app-max: 430px;
+
+  /* 安全区 */
+  --sat: env(safe-area-inset-top, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+  --sal: env(safe-area-inset-left, 0px);
+  --sar: env(safe-area-inset-right, 0px);
+
+  /* 动效 */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-spring: cubic-bezier(0.34, 1.4, 0.64, 1);
+  --dur-1: 120ms;
+  --dur-2: 220ms;
+  --dur-3: 380ms;
+}

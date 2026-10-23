@@ -1,0 +1,2 @@
+# deploy/（给 agent）
+只放生产部署片段，由 `../Dockerfile` 渲染到 `/etc/nginx/templates/`（只替换 `BACKEND_*`，nginx 变量需保持 `$` 原样）。安全基线（安全头/CSP/gzip/healthz/body 上限）与 `frontend/nginx/` 对齐；CSP 依据 `index.html` 与 `js/` 的实际用法（无内联脚本、有 style 属性、data: 图标），新增外部资源前先改 CSP；`/api` 与 `/` 的 location 内不要再写 `add_header`（会让 server 级安全头失效，缓存头用 map）。`nginx.conf.template` 参考 `frontend/nginx/`：`/api/v1/ws/` 必须声明在 `/api/` 之前并带 Upgrade 头；静态不做长缓存（无哈希文件名）。改了 /api 转发规则要同步 `../dev-server.mjs`。

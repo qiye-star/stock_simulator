@@ -1,0 +1,675 @@
+/* 通用组件样式。类名与 React Bits 组件对应：.spotlight-card .animated-list .dock .shiny-text .blur-text .aurora */
+
+/* ---------- 卡片 ---------- */
+.card {
+  background: var(--bg-1);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  padding: 14px;
+  margin-top: 12px;
+}
+.card--flush {
+  padding: 0;
+  overflow: hidden;
+}
+.card__title {
+  margin: 0 0 10px;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--text-2);
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  height: 18px;
+  padding: 0 6px;
+  border-radius: 5px;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-2);
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  vertical-align: 1px;
+  white-space: nowrap;
+}
+.tag--accent {
+  color: var(--accent);
+  background: var(--accent-soft);
+  border-color: transparent;
+}
+
+/* 涨跌幅胶囊（行情数据） */
+.pill {
+  display: inline-block;
+  min-width: 68px;
+  padding: 3px 6px;
+  border-radius: 6px;
+  text-align: center;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+}
+.pill--up {
+  color: var(--up);
+  background: var(--up-soft);
+}
+.pill--down {
+  color: var(--down);
+  background: var(--down-soft);
+}
+.pill--flat {
+  color: var(--flat);
+  background: var(--bg-2);
+}
+
+/* ---------- 分段控件（选中项强调色描边底板滑动） ---------- */
+.seg {
+  --seg-n: 2;
+  --seg-i: 0;
+  position: relative;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  padding: 3px;
+  border-radius: var(--r-md);
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+}
+.seg__thumb {
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  left: 3px;
+  width: calc((100% - 6px) / var(--seg-n));
+  transform: translateX(calc(100% * var(--seg-i)));
+  border-radius: 9px;
+  background: var(--bg-0);
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+  transition: transform var(--dur-2) var(--ease-out);
+}
+.seg button {
+  position: relative;
+  min-height: 38px;
+  padding: 0 10px;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--text-3);
+  border-radius: 9px;
+  transition: color var(--dur-2);
+  white-space: nowrap;
+}
+.seg button.is-active {
+  color: var(--text-1);
+}
+.seg button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+.seg--lg button {
+  min-height: var(--tap);
+  font-size: var(--fs-md);
+}
+.seg--lg button.is-active {
+  color: var(--accent);
+}
+.seg--inline {
+  display: inline-grid;
+}
+.seg--inline button {
+  min-height: 32px;
+  padding: 0 14px;
+}
+.seg--mini button {
+  min-height: 30px;
+  padding: 0 10px;
+}
+.seg--inline-full {
+  margin-bottom: 8px;
+}
+.seg--inline-full button {
+  min-height: 34px;
+}
+
+/* ---------- 步进器 ---------- */
+.stepper {
+  display: grid;
+  grid-template-columns: var(--tap) 1fr var(--tap);
+  align-items: center;
+  height: 48px;
+  border-radius: var(--r-md);
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  overflow: hidden;
+}
+.stepper:focus-within {
+  border-color: var(--accent);
+}
+.stepper__btn {
+  height: 100%;
+  display: grid;
+  place-items: center;
+  color: var(--text-2);
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.stepper__btn:active {
+  background: var(--press);
+  color: var(--text-1);
+}
+.stepper__btn svg {
+  width: 18px;
+  height: 18px;
+}
+.stepper input {
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  text-align: center;
+  font-size: var(--fs-lg);
+  font-weight: 600;
+}
+
+.input {
+  width: 100%;
+  height: var(--tap);
+  padding: 0 12px;
+  border-radius: var(--r-md);
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  outline: 0;
+  font-size: var(--fs-md);
+}
+.input:focus {
+  border-color: var(--accent);
+}
+.input::placeholder {
+  color: var(--text-3);
+}
+
+.select {
+  position: relative;
+  display: block;
+}
+.select select {
+  width: 100%;
+  height: 48px;
+  padding: 0 40px 0 12px;
+  appearance: none;
+  -webkit-appearance: none;
+  border-radius: var(--r-md);
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  font-size: var(--fs-md);
+  outline: 0;
+}
+.select select:focus {
+  border-color: var(--accent);
+}
+.select option {
+  background: var(--bg-2);
+}
+.select .icon {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  width: 16px;
+  height: 16px;
+  transform: translateY(-50%) rotate(90deg);
+  color: var(--text-3);
+  pointer-events: none;
+}
+
+/* ---------- 快捷仓位 chips ---------- */
+.chips {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-top: 10px;
+}
+.chip {
+  min-height: 36px;
+  border-radius: 10px;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--text-2);
+  background: transparent;
+  border: 1px solid var(--line-strong);
+  transition: transform var(--dur-1), color var(--dur-2), border-color var(--dur-2), background-color var(--dur-2);
+}
+.chip:active {
+  transform: scale(0.95);
+}
+.chip.is-active {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+/* ---------- 开关 ---------- */
+.switch {
+  position: relative;
+  flex: none;
+  width: 48px;
+  height: 28px;
+  border-radius: 999px;
+  background: var(--bg-2);
+  border: 1px solid var(--line-strong);
+  transition: background-color var(--dur-2);
+}
+/* 扩大触控热区到 ≥44px */
+.switch::before {
+  content: "";
+  position: absolute;
+  inset: -9px -4px;
+}
+.switch i {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--text-2);
+  transition: transform var(--dur-2) var(--ease-spring), background-color var(--dur-2);
+}
+.switch.is-on {
+  background: var(--accent);
+  border-color: transparent;
+}
+.switch.is-on i {
+  transform: translateX(20px);
+  background: var(--accent-ink);
+}
+
+/* ---------- 进度条 ---------- */
+.progress {
+  height: 4px;
+  border-radius: 99px;
+  background: var(--bg-2);
+  overflow: hidden;
+}
+.progress i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--accent);
+  transition: width var(--dur-3) var(--ease-out);
+}
+
+/* ---------- Dock（React Bits: Dock） ---------- */
+.dock {
+  --dock-i: 0;
+  flex: none;
+  position: relative;
+  z-index: 20;
+  padding: 6px calc(12px + var(--sar)) calc(8px + var(--sab)) calc(12px + var(--sal));
+  background: linear-gradient(to top, var(--bg-0) 60%, transparent);
+}
+.dock.is-hidden {
+  display: none; /* 二级页隐藏，view 自动占满 */
+}
+.dock__panel {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  height: var(--dock-h);
+  padding: 5px;
+  border-radius: 22px;
+  background: var(--bg-glass);
+  border: 1px solid var(--line);
+  backdrop-filter: blur(16px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  box-shadow: 0 10px 40px -12px rgba(0, 0, 0, 0.7);
+}
+.dock__highlight {
+  position: absolute;
+  top: 5px;
+  bottom: 5px;
+  left: 5px;
+  width: calc((100% - 10px) / 4);
+  border-radius: 17px;
+  background: var(--hover);
+  transform: translateX(calc(100% * var(--dock-i)));
+  transition: transform var(--dur-3) var(--ease-spring);
+}
+.dock__item {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 2px;
+  min-height: var(--tap);
+  color: var(--text-3);
+  transition: color var(--dur-2);
+  user-select: none;
+  -webkit-user-select: none;
+}
+.dock__icon {
+  display: grid;
+  transition: transform var(--dur-2) var(--ease-spring);
+}
+.dock__icon svg {
+  width: 22px;
+  height: 22px;
+}
+.dock__item:active .dock__icon {
+  transform: scale(1.22) translateY(-2px); /* 触屏版“放大镜”效果 */
+}
+.dock__label {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.dock__dot {
+  position: absolute;
+  bottom: 3px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--accent);
+  opacity: 0;
+  transform: scale(0);
+  box-shadow: 0 0 8px var(--accent-glow);
+  transition: transform var(--dur-2) var(--ease-spring), opacity var(--dur-2);
+}
+.dock__item.is-active {
+  color: var(--text-1);
+}
+.dock__item.is-active .dock__icon {
+  color: var(--accent);
+}
+.dock__item.is-active .dock__dot {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* ---------- 底部抽屉 ---------- */
+.sheet-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 50;
+  pointer-events: none;
+}
+.sheet-scrim {
+  position: absolute;
+  inset: 0;
+  background: var(--scrim);
+  opacity: 0;
+  transition: opacity var(--dur-3) var(--ease-out);
+}
+.sheet {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100% - var(--sat) - 24px);
+  background: var(--bg-1);
+  border: 1px solid var(--line);
+  border-bottom: 0;
+  border-radius: var(--r-xl) var(--r-xl) 0 0;
+  box-shadow: 0 -20px 60px -20px rgba(0, 0, 0, 0.8);
+  transform: translateY(100%);
+  transition: transform 340ms var(--ease-out);
+  touch-action: pan-y;
+}
+.sheet.is-dragging {
+  transition: none;
+}
+.sheet-layer.is-open {
+  pointer-events: auto;
+}
+.sheet-layer.is-open .sheet-scrim {
+  opacity: 1;
+}
+.sheet-layer.is-open .sheet {
+  transform: translateY(0);
+}
+.sheet__grab {
+  flex: none;
+  display: grid;
+  place-items: center;
+  height: 22px;
+  cursor: grab;
+}
+.sheet__handle {
+  width: 36px;
+  height: 4px;
+  border-radius: 99px;
+  background: var(--line-strong);
+}
+.sheet__head {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 8px 0 var(--gutter);
+}
+.sheet__title {
+  margin: 0;
+  font-size: var(--fs-lg);
+  font-weight: 650;
+}
+.sheet__body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 6px var(--gutter) calc(16px + var(--sab));
+}
+
+/* ---------- Toast ---------- */
+.toast {
+  position: absolute;
+  left: 50%;
+  top: calc(var(--sat) + 14px);
+  z-index: 80;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: calc(100% - 32px);
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: var(--bg-2);
+  border: 1px solid var(--line-strong);
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.8);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  transform: translate(-50%, -16px);
+  opacity: 0;
+  transition: transform var(--dur-3) var(--ease-spring), opacity var(--dur-2);
+  pointer-events: none;
+  white-space: nowrap;
+}
+.toast .icon {
+  width: 16px;
+  height: 16px;
+  color: var(--accent);
+}
+.toast.is-in {
+  transform: translate(-50%, 0);
+  opacity: 1;
+}
+
+/* ---------- SpotlightCard（React Bits: SpotlightCard） ---------- */
+.spotlight-card {
+  --mx: 50%;
+  --my: 50%;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background: var(--bg-1);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+}
+.spotlight-card::before,
+.spotlight-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 500ms var(--ease-out);
+}
+/* 内部柔光 */
+.spotlight-card::before {
+  z-index: -1;
+  background: radial-gradient(220px circle at var(--mx) var(--my), var(--accent-soft), transparent 70%);
+}
+/* 边缘高光（遮罩只保留 1px 边） */
+.spotlight-card::after {
+  padding: 1px;
+  background: radial-gradient(160px circle at var(--mx) var(--my), var(--accent-glow), transparent 70%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+}
+.spotlight-card.is-lit::before,
+.spotlight-card.is-lit::after {
+  opacity: 1;
+  transition-duration: 150ms;
+}
+
+/* ---------- AnimatedList（React Bits: AnimatedList，"pop" 入场） ---------- */
+.animated-list__item {
+  opacity: 0;
+  transform: scale(0.94) translateY(6px);
+  transition: opacity 360ms var(--ease-out) var(--d, 0ms), transform 420ms var(--ease-spring) var(--d, 0ms);
+}
+.animated-list__item.is-in {
+  opacity: 1;
+  transform: none;
+}
+
+/* ---------- BlurText（React Bits: BlurText） ---------- */
+.blur-text span {
+  display: inline-block;
+  filter: blur(8px);
+  opacity: 0;
+  transform: translateY(-6px);
+  animation: blur-in 520ms var(--ease-out) forwards;
+  animation-delay: var(--d);
+}
+@keyframes blur-in {
+  to {
+    filter: blur(0);
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ---------- ShinyText（React Bits: ShinyText） ---------- */
+.shiny-text {
+  background: linear-gradient(110deg, var(--text-2) 40%, var(--text-1) 50%, var(--text-2) 60%);
+  background-size: 250% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: shine 3.2s linear infinite;
+}
+@keyframes shine {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: -150% 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .shiny-text {
+    animation: none;
+    color: var(--text-1);
+    background: none;
+  }
+}
+
+/* ---------- Aurora（React Bits: Aurora，极淡点缀，仅强调色） ---------- */
+.aurora {
+  position: absolute;
+  inset: -40% -20% auto;
+  height: 160%;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(40% 50% at 20% 30%, var(--accent-soft), transparent 70%),
+    radial-gradient(35% 40% at 85% 10%, var(--accent-faint), transparent 70%);
+  filter: blur(20px);
+  opacity: 0.9;
+  animation: aurora 14s ease-in-out infinite alternate;
+}
+@keyframes aurora {
+  to {
+    transform: translate3d(8%, 6%, 0) scale(1.08);
+  }
+}
+
+/* ---------- 左滑行 ---------- */
+.swipe-row {
+  position: relative;
+  overflow: hidden;
+  touch-action: pan-y;
+}
+.swipe-row__actions {
+  position: absolute;
+  inset: 0 0 0 auto;
+  display: flex;
+}
+.swipe-act {
+  width: 72px;
+  height: 100%;
+  font-size: var(--fs-sm);
+  font-weight: 650;
+  color: var(--text-1);
+  background: var(--bg-2);
+}
+.swipe-act--buy {
+  color: var(--accent-ink);
+  background: var(--accent);
+}
+.swipe-row__main {
+  position: relative;
+  z-index: 1;
+  background: var(--bg-0);
+  transition: transform 300ms var(--ease-out);
+  -webkit-user-drag: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.swipe-row__main.is-peek {
+  animation: peek 1100ms var(--ease-out);
+}
+@keyframes peek {
+  35%,
+  55% {
+    transform: translateX(-72px);
+  }
+}
+
+/* ---------- 空状态 ---------- */
+.empty {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  padding: 40px 16px;
+  text-align: center;
+}
+.empty--sm {
+  padding: 28px 16px;
+}
+.empty__title {
+  font-size: var(--fs-lg);
+  font-weight: 650;
+}
+.empty p {
+  margin: 0 0 8px;
+}
+.empty-inline {
+  margin: 0;
+  padding: 16px;
+}
