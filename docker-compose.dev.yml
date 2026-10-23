@@ -42,7 +42,7 @@ services:
       - ./backend:/app
       - backend-venv:/app/.venv
     ports: !override
-      - "${BACKEND_DEV_PORT:-18001}:8000"
+      - "${BACKEND_DEV_PORT:-18002}:8000"
     expose: !reset []
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/v1/healthz', timeout=2)"]

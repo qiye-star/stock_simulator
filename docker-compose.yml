@@ -1,4 +1,4 @@
-# 生产形态的一键编排：migrate（alembic upgrade head）-> backend -> frontend
+# 生产形态的一键编排：migrate（alembic upgrade head）-> backend -> frontend（网页版）+ mobile（手机版）
 #
 #   docker compose up -d --build                      # 默认 sqlite
 #   docker compose --profile postgres up -d --build   # 额外启动 postgres（需在 .env 中把 DATABASE_URL 指向 postgres）
@@ -36,6 +36,9 @@ services:
       DATABASE_URL: ${DATABASE_URL:-sqlite:////data/stocksim.db}
       ENABLE_DEBUG_API: ${ENABLE_DEBUG_API:-false}
       TICKS_PER_TRADING_DAY: ${TICKS_PER_TRADING_DAY:-20}
+      # 会话签名密钥（生产必须覆盖）与 Cookie Secure 标记（外层 HTTPS 时须为 true）
+      SECRET_KEY: ${SECRET_KEY:-dev-insecure-change-me-please}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
     volumes:
       - backend-data:/data
     expose:
@@ -59,6 +62,20 @@ services:
       BACKEND_UPSTREAM: http://backend:8000
     ports:
       - "${FRONTEND_PORT:-18000}:8080"
+    depends_on:
+      backend:
+        condition: service_healthy
+
+  # 手机版：静态原型 + 同源 /api 反代，与 frontend 共用同一个 backend 与数据库
+  mobile:
+    build:
+      context: ./mobile-prototype
+    image: stocksim-mobile:local
+    restart: unless-stopped
+    environment:
+      BACKEND_UPSTREAM: http://backend:8000
+    ports:
+      - "${MOBILE_PORT:-18001}:8080"
     depends_on:
       backend:
         condition: service_healthy

@@ -12,13 +12,13 @@ cp .env.example .env
 docker compose up -d --build
 ```
 
-访问 `http://localhost:18000`（由 `FRONTEND_PORT` 决定）。
+访问网页版 `http://localhost:18000`（`FRONTEND_PORT`）、手机版 `http://localhost:18001`（`MOBILE_PORT`）。
 
 启动顺序由 `depends_on` 保证：
 
 1. `migrate` 执行 `alembic upgrade head`，成功后退出（`service_completed_successfully`）；
 2. `backend` 启动并通过 healthcheck `GET /api/v1/healthz`；
-3. `frontend` 启动。
+3. `frontend`（网页版）与 `mobile`（手机版）启动。两者共用同一个 `backend` 与数据库。
 
 查看状态与日志：
 
@@ -76,10 +76,18 @@ docker compose up -d --build
 ## 6. 安全配置
 
 - 生产环境保持 `ENABLE_DEBUG_API=false`，调试接口会修改存档资金与时间。
-- 后端端口不对外暴露，只有 frontend 的 `FRONTEND_PORT` 对宿主机开放。
+- 后端端口不对外暴露，只有 frontend 的 `FRONTEND_PORT` 与 mobile 的 `MOBILE_PORT` 对宿主机开放（公网部署建议绑定 127.0.0.1，由外层 nginx 对外）。
 - 前端 nginx 已设置 CSP、`X-Frame-Options: DENY`、`nosniff`、`Referrer-Policy`，并隐藏 nginx 版本号。
 - 若前面还有一层反向代理或负载均衡（TLS 终止），请确保它转发 `X-Forwarded-*` 头，并将 `/api/v1/ws/` 的 `Upgrade` 头透传。后端以 `--proxy-headers` 启动，`FORWARDED_ALLOW_IPS` 默认为 `*`，仅在容器网络内可达时安全；若后端对公网可达，请收紧该值。
 - 将 `change-me` 等示例密码替换为强随机值。
+
+### 双域名（a.com 网页版 + m.a.com 手机版）
+
+- `https://a.com/` -> 宿主机 18000（`frontend`）；`https://m.a.com/` -> 宿主机 18001（`mobile`）；两个容器都把同源 `/api`（含 `/api/v1/ws/`）转发到 `backend:8000`，数据库共享。
+- HTTPS 与域名分流由宿主机 nginx 完成，示例见 `deploy/host-nginx.example.conf`（80 跳 443、证书占位、WebSocket 1 小时读超时、`X-Forwarded-Proto/Host`）。
+- `.env` 必须设置 `COOKIE_SECURE=true` 与随机 `SECRET_KEY`（compose 已透传）。Cookie 为 httpOnly + SameSite=Lax，不设 Domain：两个域名各自登录、互不影响，账号与存档共享。
+- 后端没有 CORS / Host / Origin 校验，两站均为同源 `/api`，无需额外配置。
+- 手机版资产曲线的存放位置以 `mobile-prototype/CLAUDE.md` 当前说明为准。
 
 ## 7. 本地开发（不使用 Docker）
 
@@ -96,7 +104,7 @@ make migrate    # 本地库升级到 head
 docker compose -f docker-compose.yml -f docker-compose.dev.yml up
 ```
 
-- 后端：`uv run uvicorn --reload`，源码挂载，依赖在命名卷 `backend-venv` 中。访问 `http://localhost:18001`。
+- 后端：`uv run uvicorn --reload`，源码挂载，依赖在命名卷 `backend-venv` 中。访问 `http://localhost:18002`（`BACKEND_DEV_PORT`，避开手机版的 18001）。
 - 前端：`vite` 开发服务器，访问 `http://localhost:5173`，`/api` 由 vite 代理到 `backend`。
 - 开发覆盖层不构建生产镜像，`migrate` 同样使用 uv 运行。
 

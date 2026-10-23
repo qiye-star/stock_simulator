@@ -74,6 +74,23 @@ docker compose -f docker-compose.yml -f docker-compose.dev.yml up
 2. 切换数据库后是一个空库，启动时会自动执行迁移。旧库中的存档需要先导出再导入。
 3. 修改 `.env` 后需要重新执行 `up`，容器才会读取新值。
 
+### 双域名部署（网页版 + 手机版）
+
+网页版与手机版是两个容器，共用同一个后端和数据库；外层宿主机 nginx 负责 HTTPS 与域名分流，容器只提供 HTTP。
+
+| 域名 | 宿主机端口 | compose 服务 |
+| --- | --- | --- |
+| `https://a.com/` 网页版 | 18000（`FRONTEND_PORT`） | `frontend` |
+| `https://m.a.com/` 手机版 | 18001（`MOBILE_PORT`） | `mobile` |
+
+```bash
+cp .env.example .env      # 设 SECRET_KEY 随机串、COOKIE_SECURE=true
+docker compose up -d --build
+# 宿主机 nginx：参考 deploy/host-nginx.example.conf（80 跳 443、WebSocket、证书占位）
+```
+
+两个域名的登录态互相独立（Cookie 不设 Domain），但账号和存档共享。手机版资产曲线的存放位置以 [mobile-prototype/CLAUDE.md](mobile-prototype/CLAUDE.md) 当前说明为准。
+
 更多细节见 [部署指南](docs/deployment.md)。
 
 ## 项目结构
@@ -82,10 +99,12 @@ docker compose -f docker-compose.yml -f docker-compose.dev.yml up
 | --- | --- |
 | `backend/` | FastAPI 后端（uv 管理，包名 `stocksim`），含 Alembic 迁移 |
 | `frontend/` | Vite 前端，原生 ES 模块 |
+| `mobile-prototype/` | 手机版静态前端（含 Dockerfile 与 nginx 模板） |
+| `deploy/` | 宿主机 nginx 反代示例（HTTPS、域名分流） |
 | `docs/` | 架构、部署、契约与 ADR 决策记录 |
 | `scripts/` | 仓库级辅助脚本（目前为空） |
 | `legacy/` | 原版前端代码（只读，用于对拍参考） |
-| `docker-compose.yml` | 生产形态编排：migrate → backend → frontend，可选 postgres / mysql |
+| `docker-compose.yml` | 生产形态编排：migrate → backend → frontend + mobile，可选 postgres / mysql |
 | `docker-compose.dev.yml` | 开发覆盖层：源码挂载与热更新 |
 | `.env.example` | 环境变量模板 |
 | `Makefile` | 常用命令：`make dev`、`make test`、`make lint`、`make up` 等 |
