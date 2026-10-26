@@ -272,8 +272,23 @@
     return parts.length ? parts.join("，") : "已走到的边强度和滞后都已揭示";
   }
 
+  /**
+   * 事件摘要段（EventDetail 画板）：EventDetailOut 没有 summary 字段，用现有数据拼：
+   * 首条快讯标题（与事件标题不同时）；否则说明事发行业与已波及的行业数。无可用信息返回 ""。
+   */
+  function eventSummary(detail) {
+    if (!detail) return "";
+    const first = (detail.news || [])[0];
+    if (first && first.title && first.title !== detail.title) return first.title;
+    const src = detail.source_industry;
+    if (!src) return "";
+    const n = (detail.propagation || []).filter((s) => s.hop > 0).length;
+    return n ? `事发于${src}，已波及 ${n} 个行业` : `事发于${src}`;
+  }
+
   SS.newsModel = {
     revealOf,
+    eventSummary,
     lockText,
     PROP_DAYS,
     FEED_LIMIT,

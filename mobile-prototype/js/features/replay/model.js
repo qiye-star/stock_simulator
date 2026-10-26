@@ -30,6 +30,17 @@
   const basisText = (phase) => (priceBasis(phase) === "open" ? "开盘价" : priceBasis(phase) === "close" ? "收盘价" : "");
   /** 不能交易时的说明（页面展示用） */
   const blockedText = (phase) => (phase === "pre_open" ? "盘前不能交易，进入开盘后可下单" : phase === "post_close" ? "盘后不能交易，进入下一天后可下单" : "");
+  /**
+   * 卖出按钮置灰时的行内原因（空串 = 可卖）。顺序：停牌 > 阶段不能交易 > 未持有 > 当日买入未解冻（T+1）。
+   * holding 为 null 表示未持有；sellable 为可卖股数。
+   */
+  function sellBlockedText(phase, quote, holding, sellable) {
+    if (quote && quote.suspended) return "停牌";
+    if (!isTradable(phase)) return phase === "pre_open" ? "盘前不能卖" : "盘后不能卖";
+    if (!holding) return "未持有";
+    if (!(sellable > 0)) return "今日买入，明日可卖";
+    return "";
+  }
 
   /**
    * 推进目标（05 §1.3）：next_phase 走到下一位置；next_day 走到下一日盘前；
@@ -408,6 +419,7 @@
     priceBasis,
     basisText,
     blockedText,
+    sellBlockedText,
     targetPos,
     checkQuestions,
     questionStatus,

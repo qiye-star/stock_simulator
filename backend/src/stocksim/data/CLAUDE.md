@@ -20,6 +20,7 @@
 ## 常见任务
 - 增删股票：改 legacy 源（只读，不建议）或脚本；重跑脚本，断言数量（当前 385）。
 - 调整行业价格区间：改脚本中 LEGACY_RANGES_YUAN 并重跑。
+- 修正股票名称：在 `scripts/convert_stockdata.py` 的 `NAME_OVERRIDES` 加一行并重跑（legacy 只读）。2026-10-26 起 000938 为“紫光股份”（决策 19）；改名后金值需重采，见 tests/unit/domain 金值文件注释。
 
 ## 验证
 `cd backend && uv run pytest tests/unit/data -q`；生成：`python3 scripts/convert_stockdata.py`、`python3 scripts/convert_supply_chain.py`、`python3 scripts/build_stock_exposure.py`、`python3 scripts/news/build_templates.py`

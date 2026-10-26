@@ -1,15 +1,18 @@
 #!/usr/bin/env python3
 """预测卡仿真报告（02 §13.4）：只 import `stocksim.domain`，纯标准库 + 读取仓库内的 data/*.json。
 
-流程：build_ruleset → 逐交易 tick 用 domain.advance（drift 来自 build_day_plan）推演行情 → 每日收盘价 →
-对每个重大事件按 domain.build_questions 出题，按与 services 相同的真值口径（窗口收盘 → 收盘）结算，统计：
+流程：build_ruleset → 逐交易 tick 用 domain.advance（drift 来自 build_day_plan）推演行情 →
+每日收盘价 →
+对每个重大事件按 domain.build_questions 出题，按与 services 相同的真值口径（窗口收盘 →
+收盘）结算，统计：
   - 方向题各档出现率；
   - 非传闻的源行业/个股重大事件，“档位方向与 sentiment 一致”的比例（非中性档）；
   - 排序题出题率（industry/stock 重大事件）；
   - 均匀答案平均分、“只看标题”策略（sentiment 决定方向、把握 50）、理想答案（知道真值）的平均分。
 
 用法：python3 scripts/prediction_sim_report.py --seeds 2 --days 40 --clock-rules 2
-时间基：v2 每交易日 242 tick（推演时 tick 即交易 tick 序号，RNG 只需唯一即可）；v1 每交易日 20 tick。
+时间基：v2 每交易日 242 tick（推演时 tick 即交易 tick 序号，RNG 只需唯一即可）；v1 每交易日 20
+tick。
 不达标只调 domain/predictions/constants.py（本脚本不改任何领域常量）。
 """
 
@@ -41,7 +44,6 @@ from stocksim.domain.predictions import (  # noqa: E402
     QuestionContext,
     RankQ,
     Structure,
-    bucket_edges_bp,
     build_questions,
 )
 from stocksim.domain.scoring import (  # noqa: E402
@@ -94,10 +96,7 @@ def simulate(seed: int, days: int, clock_rules: int, rs, stocks, ranges):
             plan_cache[day] = build_day_plan(day, window, rs, params)
         return plan_cache[day]
 
-    if clock_rules == 2:
-        offsets = range(0, 242)
-    else:
-        offsets = range(0, 20)
+    offsets = range(0, 242) if clock_rules == 2 else range(0, 20)
     tick = 0
     for day in range(days):
         for offset in offsets:
@@ -135,7 +134,12 @@ def report(seeds: int, days: int, clock_rules: int) -> dict:
     )
     st = _structure(rs)
     stocks = [
-        {"code": r["code"], "name": r["name"], "industry": r["industry"], "profile": r.get("profile", "normal")}
+        {
+            "code": r["code"],
+            "name": r["name"],
+            "industry": r["industry"],
+            "profile": r.get("profile", "normal"),
+        }
         for r in _load("stock_pool.json")
     ]
     ranges = {r["name"]: tuple(r["base_price_range_yuan"]) for r in _load("industries.json")}
@@ -157,14 +161,20 @@ def report(seeds: int, days: int, clock_rules: int) -> dict:
                     continue
                 qs = build_questions(
                     ev,
-                    QuestionContext(seed=seed, trigger_trading_tick=trigger, structure=st, clock_rules=clock_rules),
+                    QuestionContext(
+                        seed=seed,
+                        trigger_trading_tick=trigger,
+                        structure=st,
+                        clock_rules=clock_rules,
+                    ),
                 )
                 if any(isinstance(q, RankQ) for q in qs):
                     rank_issued += 1
                 dir_q = next(q for q in qs if isinstance(q, BucketQ))
                 if dir_q.target_kind == "industry":
                     node = rs.industry_index[dir_q.target]
-                    members = [s for s, _ in rs.industry_members[node]]
+                    # 与服务层 industry_stocks 同口径（不含 extra 暴露成员）
+                    members = list(rs.industry_stocks[node])
                 elif dir_q.target_kind == "stock":
                     members = [rs.stock_index[dir_q.target]]
                 else:

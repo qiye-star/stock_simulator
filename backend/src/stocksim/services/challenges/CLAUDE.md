@@ -9,6 +9,7 @@
 - 取当前时间只经 `timeutil.now()`；配置只经 `config.current_settings()`（`create_app` 登记本应用的 Settings）。
 - 钩子（`hooks.py`）运行在调用方事务内，**不得 commit**，必须幂等。
 - 结算（C6）：成绩字段确定可重算；积分只经 `points.credit(reason="challenge", idempotency_key=f"challenge:{cid}:{uid}")`，delta=0 不入账但 `points_awarded=0` 照写。`run_settled` 在写 status 之前；status 最后一个事务才改（乐观锁冲突即重做，已非 running 返回 False）。
+- 报名（`entries.join`）：不合格（注册晚于开局 − `CHALLENGE_MIN_ACCOUNT_AGE_HOURS`）仍建存档、返回 201，`eligible=false`，不进参考集/排行/奖励；不拒绝（03 §8、§9）。
 - 奖励：仅 `eligible` 且（答过 ≥1 回合 或 有成交）的报名发放 `reward_points(rank, eligible_count)`（参与 50；前 10% +100；前三 +300/200/100，见 `domain/challenge/constants.py`，06 §4.3 建议值，偏离 03 §8.4）。
 - 排行口径：日榜只含合格报名；周/总榜只含 settled 挑战的合格报名（缺席计 0）。名次只在服务层算，不用 `points.totals_by_user`。
 - 读 master 行情前（§1.7 的 `public_event`/`reference_change_bp`/`challenge_events`）先经 `sync.advance_master` 推到 tt(now)（会 commit）。

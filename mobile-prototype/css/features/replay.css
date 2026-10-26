@@ -378,12 +378,31 @@
 }
 .replay-trade__btns {
   display: flex;
+  align-items: flex-start;
   gap: 8px;
   margin-top: 10px;
 }
 .replay-trade__btns .btn {
   flex: 1;
   min-height: 44px;
+}
+/* 卖出列：按钮下方行内写明置灰原因（T+1 / 停牌 / 未持有），不另起段落 */
+.replay-sell {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+  min-width: 0;
+}
+.replay-sell .btn {
+  flex: none;
+  width: 100%;
+}
+.replay-sell__why {
+  margin: 0;
+  text-align: center;
+  line-height: 1.3;
 }
 .replay-trade p {
   margin: 8px 0 0;

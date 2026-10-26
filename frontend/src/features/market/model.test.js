@@ -56,6 +56,10 @@ describe('quotes', () => {
       quotes: [{ code: '600036', price_cents: 12345, change_bp: -150, volume: 9000, prev_close_cents: null }],
     });
     expect(normalizeTick({ t: 'ping' })).toBeNull();
+    // 事件/挑战/预测等新消息类型（api/ws.py）：忽略而不报错
+    for (const t of ['phase', 'news', 'challenge', 'prediction', 'title', 'trade', 'achievement', 'auto_event', 'pong', 'error']) {
+      expect(normalizeTick({ t, ids: [], items: [], code: 'X' }), t).toBeNull();
+    }
   });
 
   it('derives change_bp from prev close when absent, rounding half up', () => {

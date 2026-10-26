@@ -30,16 +30,21 @@
     return best;
   }
 
-  /** 把最高优先级的 overlay 叠到 view 上；overlay.action 的按钮用 action:"overlay" 表示 */
+  /** 把最高优先级的 overlay 叠到 view 上；overlay.action 的按钮用 action:"overlay" 表示；overlay.action 为 null 时隐藏按钮 */
   function applyOverlay(v) {
     const o = topOverlay();
     if (!o) return v;
     const out = { ...v };
     for (const k of ["statusText", "nextMain", "nextSub"]) if (o[k] != null) out[k] = o[k];
-    if (o.action) {
-      out.action = "overlay";
-      out.actionLabel = o.action.label;
-      out.overlayAction = o.action;
+    // 写了 action 键（即使为 null）就接管动作区：null 表示隐藏按钮（入口由别处提供，如挑战横幅）
+    if ("action" in o) {
+      if (o.action) {
+        out.action = "overlay";
+        out.actionLabel = o.action.label;
+        out.overlayAction = o.action;
+      } else {
+        out.action = null;
+      }
     }
     return out;
   }
