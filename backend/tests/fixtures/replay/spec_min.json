@@ -1,0 +1,130 @@
+{
+  "slug": "fixture-min",
+  "title": "夹具关卡（合成数据）",
+  "title_masked": "某个周末的监管政策",
+  "teaser": "测试甲在停牌复牌后除权并连续涨跌停。",
+  "teaser_masked": "券商A 的一次停牌复牌。",
+  "tags": [
+    "政策",
+    "券商"
+  ],
+  "difficulty": 2,
+  "d0": "2023-07-04",
+  "lookback_days": 15,
+  "play_days": 6,
+  "reveal_days": 4,
+  "benchmark": {
+    "symbol": "000300",
+    "name": "沪深300"
+  },
+  "masked_allowed": true,
+  "stocks": [
+    {
+      "code": "600001",
+      "name": "测试甲",
+      "role": "focus",
+      "industry": "券商",
+      "redact_terms": [
+        "测试甲股份",
+        "测试甲"
+      ]
+    },
+    {
+      "code": "300001",
+      "name": "测试乙",
+      "role": "peer",
+      "industry": "券商",
+      "redact_terms": [
+        "测试乙"
+      ]
+    },
+    {
+      "code": "000001",
+      "role": "peer",
+      "industry": "银行",
+      "redact_terms": [
+        "测试丙"
+      ]
+    }
+  ],
+  "sources": {
+    "cninfo": true,
+    "gsrl": true,
+    "cctv": {
+      "keywords": [
+        "国务院",
+        "证监会",
+        "央行"
+      ]
+    },
+    "cls": true,
+    "em_news": false
+  },
+  "manual_events": [
+    {
+      "id": "m1",
+      "local_time": "2023-07-09 18:00",
+      "kind": "policy",
+      "importance": 3,
+      "codes": [],
+      "industries": [
+        "券商"
+      ],
+      "title": "监管部门宣布测试甲所在行业的交易成本下调",
+      "title_masked": "监管部门宣布行业交易成本下调",
+      "body": "2023年7月9日晚，监管部门发布公告。（合成数据）"
+    },
+    {
+      "id": "m2",
+      "local_time": "2023-07-06 09:00",
+      "kind": "news",
+      "importance": 1,
+      "codes": [
+        "600001"
+      ],
+      "title": "测试甲董事长接受采访",
+      "hide_in_masked": true
+    }
+  ],
+  "questions": [
+    {
+      "id": "q1",
+      "kind": "direction_bucket",
+      "code": "600001",
+      "opens": {
+        "day": 1,
+        "phase": "pre_open"
+      },
+      "closes": {
+        "day": 1,
+        "phase": "pre_open"
+      },
+      "horizon_days": 5,
+      "base": "prev_close",
+      "edges_bp": "auto",
+      "prompt": "从昨收到 5 个交易日后收盘，测试甲的涨跌幅？",
+      "prompt_masked": "从昨收到 5 个交易日后收盘，{name} 的涨跌幅？"
+    },
+    {
+      "id": "q2",
+      "kind": "rank",
+      "codes": [
+        "600001",
+        "300001",
+        "000001"
+      ],
+      "opens": {
+        "day": 1,
+        "phase": "pre_open"
+      },
+      "closes": {
+        "day": 1,
+        "phase": "pre_open"
+      },
+      "horizon_days": 5,
+      "top_k": 3,
+      "prompt": "测试甲、测试乙、测试丙未来 5 日涨幅排序"
+    }
+  ],
+  "commentary": "合成数据，仅用于测试。"
+}

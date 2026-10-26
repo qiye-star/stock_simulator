@@ -20,3 +20,4 @@ tests
 **/*Zone.Identifier
 Dockerfile
 .dockerignore
+.replay-data
