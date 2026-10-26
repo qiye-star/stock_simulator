@@ -105,7 +105,9 @@ def test_cursor_stable_when_market_unchanged(registered_client: TestClient, app:
     page1 = _list(registered_client, sid, limit=20, sort="change")
     again = _list(registered_client, sid, limit=20, sort="change", cursor=page1["next_cursor"])
     again2 = _list(registered_client, sid, limit=20, sort="change", cursor=page1["next_cursor"])
-    assert again == again2
+    # server_time 是每次响应生成的时刻（时钟校正用），不属于行情内容，比较前剔除
+    strip = lambda r: {k: v for k, v in r.items() if k != "server_time"}  # noqa: E731
+    assert strip(again) == strip(again2)
 
 
 def test_cursor_survives_ticks_without_duplicates_for_code_sort(

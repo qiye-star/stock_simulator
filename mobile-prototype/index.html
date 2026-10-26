@@ -14,6 +14,11 @@
     <link rel="stylesheet" href="css/base.css" />
     <link rel="stylesheet" href="css/components.css" />
     <link rel="stylesheet" href="css/pages.css" />
+    <link rel="stylesheet" href="css/features/news.css" />
+    <link rel="stylesheet" href="css/features/predict.css" />
+    <link rel="stylesheet" href="css/features/challenge.css" />
+    <link rel="stylesheet" href="css/features/replay.css" />
+    <link rel="stylesheet" href="css/features/pm.css" />
   </head>
   <body>
     <div class="app">
@@ -26,24 +31,92 @@
     <!-- 经典脚本（非 module），以支持 file:// 直接打开；顺序即依赖顺序 -->
     <script src="js/lib/html.js"></script>
     <script src="js/lib/format.js"></script>
+    <script src="js/lib/clock-model.js"></script>
     <script src="js/mock/data.js"></script>
     <script src="js/lib/store.js"></script>
     <script src="js/lib/api.js"></script>
     <script src="js/lib/store.real.js"></script>
     <script src="js/lib/chart.js"></script>
     <script src="js/lib/router.js"></script>
-    <script src="js/components/count-up.js"></script>
+    <script src="js/lib/slots.js"></script>
+    <script src="js/lib/predict-math.js"></script>
     <script src="js/components/effects.js"></script>
     <script src="js/components/dock.js"></script>
     <script src="js/components/sheet.js"></script>
     <script src="js/components/swipe-row.js"></script>
     <script src="js/components/order-sheet.js"></script>
+    <script src="js/components/soon-card.js"></script>
+    <script src="js/components/trade-bar.js"></script>
+    <script src="js/components/clock-help.js"></script>
+    <script src="js/components/close-summary.js"></script>
     <script src="js/pages/market.js"></script>
     <script src="js/pages/stock.js"></script>
     <script src="js/pages/portfolio.js"></script>
     <script src="js/pages/auto.js"></script>
     <script src="js/pages/me.js"></script>
     <script src="js/pages/login.js"></script>
+    <script src="js/pages/coming-soon.js"></script>
+    <script src="js/pages/play.js"></script>
+    <!-- feature:news（⑤ A 事件行情）：mock → model → store → 页面 → index -->
+    <script src="js/features/news/mock.js"></script>
+    <script src="js/features/news/model.js"></script>
+    <script src="js/features/news/store.js"></script>
+    <script src="js/features/news/news-page.js"></script>
+    <script src="js/features/news/event-page.js"></script>
+    <script src="js/features/news/chain-page.js"></script>
+    <script src="js/features/news/index.js"></script>
+    <!-- /feature:news -->
+    <!-- feature:predict（⑥ B 预测卡 / 积分 / 情报卡 / 称号）：model → mock → titles → store → 卡片与页面 → 挂件 → index -->
+    <script src="js/features/predict/model.js"></script>
+    <script src="js/features/predict/mock.js"></script>
+    <script src="js/features/predict/titles.js"></script>
+    <script src="js/features/predict/store.js"></script>
+    <script src="js/features/predict/prediction-card.js"></script>
+    <script src="js/features/predict/intel-sheet.js"></script>
+    <script src="js/features/predict/calib-chart.js"></script>
+    <script src="js/features/predict/settle-page.js"></script>
+    <script src="js/features/predict/predictions-page.js"></script>
+    <script src="js/features/predict/me-widgets.js"></script>
+    <script src="js/features/predict/slot-widgets.js"></script>
+    <script src="js/features/predict/index.js"></script>
+    <!-- /feature:predict -->
+    <!-- feature:challenge（⑦ C 每日挑战）：model → mock → store → 校验/片段/流程 → 挂件与页面 → index -->
+    <script src="js/features/challenge/model.js"></script>
+    <script src="js/features/challenge/mock.js"></script>
+    <script src="js/features/challenge/store.js"></script>
+    <script src="js/features/challenge/verify.js"></script>
+    <script src="js/features/challenge/ui.js"></script>
+    <script src="js/features/challenge/flow.js"></script>
+    <script src="js/features/challenge/play-card.js"></script>
+    <script src="js/features/challenge/challenge-page.js"></script>
+    <script src="js/features/challenge/board-page.js"></script>
+    <script src="js/features/challenge/review-page.js"></script>
+    <script src="js/features/challenge/index.js"></script>
+    <!-- /feature:challenge -->
+    <!-- feature:pm（⑧ D 预测市场）：model → mock → store → ui → 买卖面板 → 页面与玩法分区 → index -->
+    <script src="js/features/pm/model.js"></script>
+    <script src="js/features/pm/mock.js"></script>
+    <script src="js/features/pm/store.js"></script>
+    <script src="js/features/pm/ui.js"></script>
+    <script src="js/features/pm/trade-panel.js"></script>
+    <script src="js/features/pm/list-page.js"></script>
+    <script src="js/features/pm/records-page.js"></script>
+    <script src="js/features/pm/detail-page.js"></script>
+    <script src="js/features/pm/play-card.js"></script>
+    <script src="js/features/pm/index.js"></script>
+    <!-- /feature:pm -->
+    <!-- feature:replay（⑨ E 真实复盘）：model → mock → store → ui → 订单抽屉 → 选关/会话/揭示页 → 玩法分区 → index -->
+    <script src="js/features/replay/model.js"></script>
+    <script src="js/features/replay/mock.js"></script>
+    <script src="js/features/replay/store.js"></script>
+    <script src="js/features/replay/ui.js"></script>
+    <script src="js/features/replay/replay-order-sheet.js"></script>
+    <script src="js/features/replay/replay-list-page.js"></script>
+    <script src="js/features/replay/replay-session-page.js"></script>
+    <script src="js/features/replay/replay-reveal-page.js"></script>
+    <script src="js/features/replay/play-card.js"></script>
+    <script src="js/features/replay/index.js"></script>
+    <!-- /feature:replay -->
     <script src="js/app.js"></script>
   </body>
 </html>

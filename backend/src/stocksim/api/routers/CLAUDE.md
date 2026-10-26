@@ -24,3 +24,8 @@
 
 - `auto_trade.py` 条件单 CRUD、`start|pause|resume|stop|reset`、`status`、`events`（keyset cursor）。
 - `legacy.py` `POST /import/legacy`。`debug.py` `/saves/{id}/debug/*`（依赖守门）。`ws.py` `WS /ws/saves/{id}`（无前缀，完整路径）。
+- `challenges.py` 每日挑战（03 §10.1）：`GET /challenges/today`、`GET /challenges`（cursor 为 YYYY-MM-DD）、`GET /challenges/{id}`、`POST /challenges/{id}/entry`（201 新建 / 200 已有）、`GET /challenges/{id}/rounds`、`PUT /challenges/{id}/rounds/{round_index}/answer`、`GET /challenges/{id}/leaderboard`、`GET /challenge-leaderboard`、`GET /challenges/{id}/reveal`、`GET /challenges/{id}/review`。
+- `debug_challenges.py` `POST /debug/challenges/ensure`、`POST /debug/challenges/{id}/shift`（依赖 `ENABLE_DEBUG_API` 与 `CHALLENGE_ENABLED`）。
+- `replay.py` 真实复盘（05 §5.8）：`GET /replay/levels`、`GET /replay/levels/{slug}`、`POST /replay/sessions`（201）、`GET /replay/sessions`、`GET /replay/sessions/{id}`、`POST /replay/sessions/{id}/advance|finish`、`GET /replay/sessions/{id}/feed|questions|benchmark|reveal`、`PUT /replay/sessions/{id}/questions/{qid}/answer`。建会话的上限取 `Settings.MAX_REPLAY_SESSIONS_PER_USER`（经 `SettingsDep` 传入服务层）。
+
+- `prediction_markets.py` 预测市场 REST（04 §9.1）：公开市场、个人持仓与结算、调试 void/sync（`debug_router` 经 `router.include_router` 挂入，只认 `router`）。`pm_ws.py` `WS /ws/prediction-markets`（循环在 `api/pm_ws.py`）。

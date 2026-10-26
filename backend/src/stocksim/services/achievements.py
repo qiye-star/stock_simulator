@@ -56,6 +56,7 @@ def record_unlocks(
         fund_cents=save.cash_cents,
         initial_fund_cents=save.initial_fund_cents,
         watchlist_count=watchlist_count,
+        clock_rules=save.clock_rules,
     )
     unlocked = set(
         db.scalars(select(SaveAchievement.achievement_id).where(SaveAchievement.save_id == save.id))

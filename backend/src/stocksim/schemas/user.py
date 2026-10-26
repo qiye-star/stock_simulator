@@ -15,6 +15,7 @@ class UserOut(BaseModel):
     theme: str
     lang: str
     refresh_rate_ms: int
+    clock_speed: Literal["fast", "normal", "slow"]  # v2 存档的节奏档（约 10/20/30 分钟一交易日）
     tutorial_completed: bool
     created_at: datetime
 
@@ -25,4 +26,5 @@ class MePatch(BaseModel):
     theme: Literal["dark", "light", "festival"] | None = None
     lang: Literal["zh-CN", "en-US"] | None = None
     refresh_rate_ms: int | None = Field(default=None, ge=500, le=60000)
+    clock_speed: Literal["fast", "normal", "slow"] | None = None
     tutorial_completed: bool | None = None

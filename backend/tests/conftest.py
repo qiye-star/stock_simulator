@@ -24,6 +24,7 @@ def settings(tmp_path: Path) -> Settings:
         DATABASE_URL=f"sqlite:///{tmp_path / 'test.db'}",
         SECRET_KEY=TEST_SECRET,
         COOKIE_SECURE=False,
+        PM_BACKGROUND_ENABLED=False,  # 预测市场后台 Hub 关闭，用例直接调用生命周期
     )
 
 

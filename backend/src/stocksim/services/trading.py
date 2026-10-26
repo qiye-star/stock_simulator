@@ -9,6 +9,7 @@
 from __future__ import annotations
 
 import uuid
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any, Literal
 
@@ -25,9 +26,12 @@ from stocksim.domain.matching import execute_order
 from stocksim.domain.types import Account, OrderRequest, TradeSettings
 from stocksim.domain.types import Holding as DomainHolding
 from stocksim.models import Holding, Save, SaveSector, SaveStats, Trade
+from stocksim.models.save import SAVE_MODE_CHALLENGE
 from stocksim.services import achievements as achievements_service
+from stocksim.services import market as market_service
 from stocksim.services.market import load_market
-from stocksim.services.stocks import get_stock_info
+from stocksim.services.stocks import StockInfo, get_stock_info, stock_info_for
+from stocksim.services.stocks import info_lookup as stock_info_for_lookup
 
 MAX_ATTEMPTS = 3
 PAGE_SIZE = 50
@@ -41,9 +45,11 @@ class PlacedOrder:
     replayed: bool = False
 
 
-def trade_to_dict(trade: Trade) -> dict[str, Any]:
-    """成交行 -> API 输出字典（不含 fund_before 等内部快照）。"""
-    info = get_stock_info(trade.stock_code)
+def trade_to_dict(
+    trade: Trade, info_lookup: Callable[[str], StockInfo | None] = get_stock_info
+) -> dict[str, Any]:
+    """成交行 -> API 输出字典（不含 fund_before 等内部快照）。复盘存档传入复盘查找函数。"""
+    info = info_lookup(trade.stock_code)
     return {
         "id": trade.id,
         "seq": trade.seq,
@@ -68,9 +74,8 @@ def trade_to_dict(trade: Trade) -> dict[str, Any]:
     }
 
 
-def _record_for_stats(trade: Trade) -> dict[str, Any]:
-    """成交行 -> domain 成就统计输入（TradeRecord 形态）。"""
-    info = get_stock_info(trade.stock_code)
+def _record_for_stats(trade: Trade, info: StockInfo | None) -> dict[str, Any]:
+    """成交行 -> domain 成就统计输入（TradeRecord 形态）。info 由调用方按存档视角给出。"""
     return {
         "code": trade.stock_code,
         "name": info.name if info else "",
@@ -107,7 +112,7 @@ def today_trade_refs(db: Session, save: Save, trading_day: int) -> list[dict[str
 def load_holdings(db: Session, save: Save) -> dict[str, DomainHolding]:
     out: dict[str, DomainHolding] = {}
     for row in db.scalars(select(Holding).where(Holding.save_id == save.id)):
-        info = get_stock_info(row.stock_code)
+        info = stock_info_for(db, save, row.stock_code)
         out[row.stock_code] = DomainHolding(
             code=row.stock_code,
             name=info.name if info else "",
@@ -174,6 +179,11 @@ def _place_once(
     auto_config_id: uuid.UUID | None,
     idempotency_key: str | None,
 ) -> PlacedOrder:
+    if save.mode == SAVE_MODE_CHALLENGE:
+        # 挑战玩家：先按公共时间线同步镜像（phase ended / 已结算 → CHALLENGE_ENDED，03 §3.2）
+        from stocksim.services.challenges import sync as challenge_sync
+
+        challenge_sync.before_trade(db, save)
     if idempotency_key is not None:
         existing = find_by_idempotency_key(db, save.id, idempotency_key)
         if existing is not None:
@@ -183,6 +193,10 @@ def _place_once(
     quote = to_quote(state, code)
     if quote is None:
         raise AppError(ErrorCode.STOCK_NOT_FOUND, {"code": code})
+    # 复盘守卫（已结算 / 停牌 / 封板）；普通存档恒为 None
+    guard = market_service.trade_guard(state, code, side)
+    if guard is not None:
+        raise AppError(*guard)
 
     trading_day = int(state["trading_day"])
     settings = TradeSettings(
@@ -190,6 +204,7 @@ def _place_once(
         sell_fee_rate=save.sell_fee_rate,
         trade_unit=save.trade_unit,
         t0_mode=save.t0_mode,
+        clock_rules=save.clock_rules,
     )
     request = OrderRequest(
         code=code,
@@ -246,8 +261,9 @@ def _place_once(
     _add_sector(db, save.id, quote.industry)
     db.flush()
 
+    lookup = stock_info_for_lookup(db, save)
     all_trades = [
-        _record_for_stats(t)
+        _record_for_stats(t, lookup(t.stock_code))
         for t in db.scalars(select(Trade).where(Trade.save_id == save.id).order_by(Trade.seq))
     ]
     prices = {
@@ -256,6 +272,11 @@ def _place_once(
     new_ids = achievements_service.record_unlocks(
         db, save, trades=all_trades, holdings=result.account.holdings, prices=prices
     )
+    if save.mode == SAVE_MODE_CHALLENGE:
+        # 提交前复核 master tick：若读行情与镜像之间被他人推进，本次成交与镜像不一致，整体重试
+        master_tick = db.scalar(select(Save.tick).where(Save.id == save.market_source_id))
+        if master_tick != save.tick:
+            raise StaleDataError("challenge master advanced during order placement")
     db.commit()
     return PlacedOrder(trade, tuple(new_ids), save.cash_cents)
 

@@ -21,7 +21,7 @@ from stocksim.core.errors import AppError, ErrorCode
 from stocksim.db.base import utcnow
 from stocksim.domain.auto_trade.conditions import AutoTradeConfig as DomainConfig
 from stocksim.domain.auto_trade.conditions import cooldown_ticks, should_trigger
-from stocksim.domain.clock import is_trading_time
+from stocksim.domain.clock import is_order_time
 from stocksim.domain.errors import DomainError
 from stocksim.domain.money import round_half_up_div
 from stocksim.domain.types import Holding as DomainHolding
@@ -38,6 +38,7 @@ from stocksim.models import (
 )
 from stocksim.schemas.auto_trade import AutoConfigIn
 from stocksim.services import trading as trading_service
+from stocksim.services.market import market_key, reject_challenge, reject_replay
 
 # 事件码（非 HTTP 错误）：与 docs/CONTRACT.md 的自动交易事件码一致
 AUTO_MAX_AMOUNT_EXCEEDED = "AUTO_MAX_AMOUNT_EXCEEDED"
@@ -151,6 +152,8 @@ def _stock_names(db: Session, codes: set[str]) -> dict[str, str]:
 
 
 def create_config(db: Session, save: Save, body: AutoConfigIn) -> tuple[AutoTradeConfig, str]:
+    reject_challenge(save, "auto_trade")
+    reject_replay(save, "auto_trade")
     _validate(body)
     stock = _require_stock(db, body.code)
     row = AutoTradeConfig(save_id=save.id)
@@ -164,6 +167,8 @@ def create_config(db: Session, save: Save, body: AutoConfigIn) -> tuple[AutoTrad
 def update_config(
     db: Session, save: Save, config_id: uuid.UUID, body: AutoConfigIn
 ) -> tuple[AutoTradeConfig, str]:
+    reject_challenge(save, "auto_trade")
+    reject_replay(save, "auto_trade")
     _validate(body)
     row = _get_config(db, save, config_id)
     stock = _require_stock(db, body.code)
@@ -215,6 +220,9 @@ def run_action(db: Session, save: Save, action: str) -> dict[str, Any]:
     """start | pause | resume | stop | reset。pause/resume 只改暂停标记，不改启用状态。"""
     if action not in RUN_ACTIONS:
         raise AppError(ErrorCode.VALIDATION_ERROR, {"field": "action"})
+    if action in ("start", "resume"):
+        reject_challenge(save, "auto_trade")  # 挑战存档自动交易禁用（03 §3.2）
+        reject_replay(save, "auto_trade")
     if action == "start":
         save.auto_enabled, save.auto_paused = True, False
     elif action == "pause":
@@ -390,7 +398,7 @@ def run_auto_trade(db: Session, save: Save) -> list[Trade]:
     """
     if not save.auto_enabled or save.auto_paused or save.paused:
         return []
-    if not is_trading_time(save.clock_minute):
+    if not is_order_time(save.clock_minute, save.clock_rules):
         return []
     configs = list(
         db.scalars(
@@ -399,7 +407,7 @@ def run_auto_trade(db: Session, save: Save) -> list[Trade]:
             .order_by(AutoTradeConfig.created_at, AutoTradeConfig.id)
         )
     )
-    market = db.get(MarketState, save.id)
+    market = db.get(MarketState, market_key(save))
     if not configs or market is None:
         return []
 

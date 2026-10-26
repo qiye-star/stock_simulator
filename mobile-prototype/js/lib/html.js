@@ -100,6 +100,12 @@
     pause: '<path d="M9 5v14M15 5v14"/>',
     play: '<path d="M7 5l12 7-12 7z"/>',
     swap: '<path d="M7 7h12l-3-3M17 17H5l3 3"/>',
+    // 5 tab Dock 与玩法页新增（取自画板）
+    news: '<rect x="5" y="4" width="14" height="16" rx="2"/><path d="M8 9h8M8 13h8M8 17h5"/>',
+    pie: '<circle cx="12" cy="12" r="8"/><path d="M12 4v8l6 4"/>',
+    games: '<path d="M12 3l2.6 5.6 6 .7-4.5 4.1 1.2 6L12 16.6 6.7 19.4l1.2-6L3.4 9.3l6-.7z"/>',
+    chain: '<circle cx="5.5" cy="12" r="2.5"/><circle cx="18.5" cy="6.5" r="2.5"/><circle cx="18.5" cy="17.5" r="2.5"/><path d="M8 11l8-3.3M8 13l8 3.3"/>',
+    lock: '<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
   };
   SS.icon = (name, cls = "") =>
     SS.raw(

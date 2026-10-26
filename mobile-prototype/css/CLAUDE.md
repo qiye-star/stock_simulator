@@ -4,8 +4,9 @@
 | --- | --- |
 | `tokens.css` | **唯一颜色来源**：背景 3 层、文字 3 级、边框、`--accent`、`--up/--down`、字号、间距、安全区、动效时长 |
 | `base.css` | 重置、`.app` 外框（手机铺满 / 桌面居中手机框）、`#view` 滚动容器、按钮、`.num/.up/.down`、骨架屏、reduced-motion 全局降级 |
-| `components.css` | 卡片、分段、步进器、开关、Dock、抽屉、Toast、React Bits 复刻效果、左滑行、空状态 |
-| `pages.css` | 各页面布局（按页面分段注释） |
+| `components.css` | 卡片、分段、步进器、开关、Dock（5 项，`--dock-n` 等分）、抽屉、Toast、React Bits 复刻效果、左滑行、空状态、交易状态栏（`.trade-bar*`）、说明弹层（`.clock-help` `.timeline` `.speed-seg`）、占位卡（`.soon-card`） |
+| `pages.css` | 各页面布局（按页面分段注释）；紧凑状态栏的旧时钟胶囊已删除 |
+| `features/*.css` | 玩法样式（⑤ 起，见 `features/CLAUDE.md`），在四层之后加载；只用 tokens |
 
 ## 规则
 - 不得写死色值（`rgba(0,0,0,…)` 阴影/遮罩除外），新颜色先加到 tokens。

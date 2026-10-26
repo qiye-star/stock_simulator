@@ -11,6 +11,7 @@
 | `schemas/` | 接口的 Pydantic 请求响应模型 |
 | `services/` | 业务服务 |
 | `api/` | 依赖注入与路由 |
-| `domain/`、`data/` | 纯领域规则与静态数据，由另一条线维护 |
+| `domain/`、`data/` | 纯领域规则与静态数据（含事件引擎 `domain/events/`） |
+| `replay_ingest/` | 真实复盘离线数据管道（AKShare 抓取、关卡包构建与校验），不进运行时 |
 
 更多见 [backend/README.md](../../README.md)。

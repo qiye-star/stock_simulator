@@ -91,6 +91,9 @@
     wsUrl,
     /** 由 app.js 注入：会话失效时跳登录页 */
     onUnauthorized: null,
+    /** 后端没有的功能接口（HTTP_404/405/501）：本会话内不再请求，见 js/features/<name>/store.js 的 guarded() */
+    missing: new Set(),
+    isMissing: (err) => !!err && ["HTTP_404", "HTTP_405", "HTTP_501"].includes(err.code),
   };
   SS.api = api;
 })();

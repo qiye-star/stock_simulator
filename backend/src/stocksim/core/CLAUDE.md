@@ -12,6 +12,7 @@
 
 ## 文件地图
 - `config.py` Settings、`get_settings()`（lru_cache）、`DEV_SECRET_KEY`。
+  - `CHALLENGE_*`（03 §11.1）：每日挑战的开关、seed 密钥、调度（daily/compact）、时段、快放节奏、门槛与保留期。`main.create_app` 校验：compact 需 `ENABLE_DEBUG_API=true`，daily 的时段个数 = 回合数 + 1；挑战服务经 `services/challenges/config.current_settings()` 读取本应用的 Settings。
 - `errors.py` ErrorCode、ERROR_STATUS、AppError、`register_error_handlers`。
 - `security.py` 密码哈希/校验、dummy 哈希（防用户名枚举计时）、会话 token。
 

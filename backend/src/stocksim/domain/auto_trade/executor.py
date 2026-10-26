@@ -14,7 +14,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from typing import Any
 
-from ..clock import is_trading_time
+from ..clock import is_order_time
 from ..errors import AUTO_LIMIT_REACHED, AUTO_MAX_AMOUNT_EXCEEDED, VALIDATION_ERROR, DomainError
 from ..matching import execute_order
 from ..types import Account, OrderRequest, Quote, TradeRecord, TradeSettings
@@ -95,7 +95,7 @@ def run_auto_trades(
 
     trades: 该存档已有成交（用于 T+1）；本次新增成交会在循环内追加参与后续判断。
     """
-    if not is_trading_time(minute_of_day):
+    if not is_order_time(minute_of_day, settings.clock_rules):
         return AutoTickResult(runtime, account, (), ())
 
     last_attempt = dict(runtime.last_attempt_tick)

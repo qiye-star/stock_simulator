@@ -21,6 +21,9 @@ uv run pytest tests/unit/domain -q
 | `matching.py` | 单笔订单撮合（手动与自动共用） |
 | `types.py` | 账户、持仓、行情快照、订单与成交记录的数据结构 |
 | `errors.py` | `DomainError` 与错误码常量 |
+| `events/` | 事件行情：事件生成、产业链传导、每 tick 漂移计划、快讯文案（纯函数） |
+| `challenge/` | 每日挑战纯函数：常量、公共时间线、剧本贪心挑回合、seed 承诺、计分与排名（见 `challenge/CLAUDE.md`） |
+| `prediction_market/` | 预测市场纯函数：LMSR 定价取整（decimal）、回合事件合约与结算判定、下单限额（见 `prediction_market/CLAUDE.md`） |
 | `auto_trade/` | 自动交易的条件判断与执行 |
 | `achievements/` | 成就目录、统计与判定 |
 
@@ -33,3 +36,5 @@ uv run pytest tests/unit/domain -q
 - 行情使用计数器式随机数，`(seed, tick)` 唯一决定结果，便于回放与对拍。
 - 限价单按市价成交（修复了 legacy 按限价成交的问题），不成交时明确报错。
 - 成就统计只依赖成交记录中的快照字段，不依赖当前行情。
+
+- 真实复盘的纯函数 `replay.py`：阶段位置、事件可见性、按关卡包缩放的显示价、阶段报价与标志位、收益率（05 §5.4）。

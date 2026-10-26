@@ -219,3 +219,10 @@ def test_market_closed_returns_unchanged():
 def test_missing_quote_is_skipped_silently():
     r = run([cfg()], quotes={})
     assert r.events == ()
+
+
+def test_v2_auto_trade_idle_at_close_and_lunch_but_runs_inside_window():
+    v2 = TradeSettings(clock_rules=2)
+    assert run([cfg()], minute=690, settings=v2).events == ()
+    assert run([cfg()], minute=900, settings=v2).events == ()
+    assert run([cfg()], minute=899, settings=v2).account.fund_cents < 10_000_000

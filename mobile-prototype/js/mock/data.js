@@ -28,14 +28,31 @@
   }
   const rand = rng(20261023);
 
+  // ---------- 演示参数（只在假数据模式生效；默认 v2 存档、10:35、标准速度） ----------
+  //   ?mockclock=HH:MM   覆盖起始分钟（非法值忽略）
+  //   ?mockrules=v1      使用 v1 存档（状态栏“经典节奏”、无收盘小结、午休瞬跳）
+  //   ?mockspeed=N       每游戏分钟的毫秒数除以 N（加速演示，只影响 ms_per_minute）
+  const QS = new URLSearchParams(location.search);
+  const parseClockParam = (v) => {
+    const m = /^(\d{1,2}):(\d{2})$/.exec(v || "");
+    if (!m || +m[1] > 23 || +m[2] > 59) return null;
+    return +m[1] * 60 + +m[2];
+  };
+  const RULES = QS.get("mockrules") === "v1" ? "v1" : "v2";
+  const SPEED_SCALE = Number(QS.get("mockspeed")) > 0 ? Number(QS.get("mockspeed")) : 1;
+  const START_MINUTE = parseClockParam(QS.get("mockclock")) ?? 10 * 60 + 35;
+
   // ---------- 时钟（ClockOut） ----------
   const clock = {
     paused: false,
     tick: 942,
     trading_day: 48,
-    clock_minute: 10 * 60 + 35, // 10:35
+    clock_minute: START_MINUTE,
     session: "trading",
     skipped_ticks: 0,
+    clock_rules: RULES,
+    // v2 字段由 store.js 的调度器维护（publishV2）；v1 缺省时由 clock-model 推算
+    ...(RULES === "v2" ? { ms_per_minute: SS.clockModel.SPEEDS_V2.normal / SPEED_SCALE } : {}),
   };
   const AS_OF = new Date(Date.UTC(2026, 6, 1)); // 交易日 0 的日期（market_states._meta.as_of）
 
@@ -55,10 +72,16 @@
     ["000333", "美的集团", "家电", 7015, 0.12, false],
     ["002415", "海康威视", "安防", 3196, -0.95, false],
     ["603259", "药明康德", "医药服务", 5544, 1.07, false],
+    // 事件模式（⑤）：有色 / 新能源 的源股票与传导股票
+    ["601899", "紫金矿业", "有色", 18500, 3.2, true],
+    ["603993", "洛阳钼业", "有色", 12600, 2.6, true],
+    ["002460", "赣锋锂业", "新能源", 58200, -1.8, false],
   ];
 
   const MORNING_OPEN = 570;
-  const nowIdx = clock.clock_minute - MORNING_OPEN; // 已走过的分钟数
+  /** 当日分钟 → 分时下标（与 store.real.js::minuteIdx 一致：午休折叠，9:30=0，15:00=240） */
+  const foldIdx = (m) => (m <= MORNING_OPEN ? 0 : m <= 690 ? m - MORNING_OPEN : m < 780 ? 120 : Math.min(240, 121 + (m - 780)));
+  const nowIdx = foldIdx(clock.clock_minute); // 已走过的分时下标
 
   /** 生成一段分时价格（分）：从 open 随机游走，再线性校正使终点落在 end（布朗桥） */
   function walk(start, end, n, vol) {
@@ -138,6 +161,8 @@
     sell_fee_rate: "0.0013",
     t0_mode: false,
     trade_unit: 100,
+    clock_rules: RULES,
+    events_enabled: true, // 事件模式（假数据默认开启，便于快讯 / 事件 / 产业链 演示）
     created_at: "2026-07-01T01:30:00Z",
   };
 
@@ -292,9 +317,10 @@
     theme: "dark",
     lang: "zh-CN",
     refresh_rate_ms: 3000,
+    clock_speed: "normal",
     tutorial_completed: true,
     created_at: "2026-06-28T12:00:00Z",
   };
 
-  SS.mock = { clock, stocks, save, holdings, cash_cents, trades, equity_history, auto_configs, auto_status, auto_events, user, nextSeq: TRADE_SPECS.length + 1 };
+  SS.mock = { clock, stocks, save, holdings, cash_cents, trades, equity_history, auto_configs, auto_status, auto_events, user, nextSeq: TRADE_SPECS.length + 1, speedScale: SPEED_SCALE };
 })();

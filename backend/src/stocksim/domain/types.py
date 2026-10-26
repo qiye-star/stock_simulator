@@ -8,6 +8,7 @@ from decimal import Decimal
 from typing import Literal, TypedDict
 
 from .money import round_half_up_div
+from .rules import LIMIT_PCT_BP
 
 Side = Literal["buy", "sell"]
 PriceType = Literal["market", "limit"]
@@ -68,6 +69,7 @@ class Quote:
     price_cents: int
     prev_close_cents: int
     circuit_breaker_active: bool = False
+    limit_pct_bp: int = LIMIT_PCT_BP  # 涨跌幅（基点）：主板 1000、创业板 2000（复盘按板块）
 
 
 @dataclass(frozen=True)
@@ -76,6 +78,7 @@ class TradeSettings:
     sell_fee_rate: Decimal = Decimal("0.0013")
     trade_unit: int = 1  # 1 或 100
     t0_mode: bool = False
+    clock_rules: int = 1  # 撮合窗口按规则版本判断（v1 = is_trading_time，v2 = 半开区间）
 
 
 @dataclass(frozen=True)

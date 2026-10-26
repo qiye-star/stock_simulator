@@ -3,6 +3,7 @@
 #   docker compose up -d --build                      # 默认 sqlite
 #   docker compose --profile postgres up -d --build   # 额外启动 postgres（需在 .env 中把 DATABASE_URL 指向 postgres）
 #   docker compose --profile mysql up -d --build      # 额外启动 mysql
+#   docker compose --profile collector up -d --build replay-collector   # 真实复盘定时抓存（默认不启动）
 #
 # 变量见 .env.example。开发热更新请叠加 docker-compose.dev.yml。
 
@@ -39,17 +40,54 @@ services:
         PIP_INDEX_URL: ${PIP_INDEX_URL:-https://pypi.tuna.tsinghua.edu.cn/simple}
     image: stocksim-backend:local
     restart: unless-stopped
-    environment:
+    environment: &backend-env
       DATABASE_URL: ${DATABASE_URL:-sqlite:////data/stocksim.db}
       ENABLE_DEBUG_API: ${ENABLE_DEBUG_API:-false}
       TICKS_PER_TRADING_DAY: ${TICKS_PER_TRADING_DAY:-20}
       # 会话签名密钥（生产必须覆盖）与 Cookie Secure 标记（外层 HTTPS 时须为 true）
       SECRET_KEY: ${SECRET_KEY:-dev-insecure-change-me-please}
       COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      # 每日挑战（03 §11.1）。runner 与 backend 共用这一组变量（YAML 锚点）。
+      # CHALLENGE_SEED_KEY 生产必须设置；为空时由 SECRET_KEY 派生（开发密钥下 seed 可预测）。
+      # CHALLENGE_SCHEDULE=compact 仅开发/e2e，且要求 ENABLE_DEBUG_API=true。
+      CHALLENGE_ENABLED: ${CHALLENGE_ENABLED:-true}
+      CHALLENGE_SEED_KEY: ${CHALLENGE_SEED_KEY:-}
+      CHALLENGE_SCHEDULE: ${CHALLENGE_SCHEDULE:-daily}
+      CHALLENGE_SLOTS: ${CHALLENGE_SLOTS:-07:00,12:00,17:00,20:30,23:00}
+      CHALLENGE_TICK_MS: ${CHALLENGE_TICK_MS:-750}
+      CHALLENGE_HOLD_POLL_MS: ${CHALLENGE_HOLD_POLL_MS:-5000}
+      CHALLENGE_COMPACT_SLOT_SECONDS: ${CHALLENGE_COMPACT_SLOT_SECONDS:-30}
+      CHALLENGE_COMPACT_TICK_MS: ${CHALLENGE_COMPACT_TICK_MS:-10}
+      CHALLENGE_MIN_ACCOUNT_AGE_HOURS: ${CHALLENGE_MIN_ACCOUNT_AGE_HOURS:-72}
+      CHALLENGE_PLAYER_RETENTION_DAYS: ${CHALLENGE_PLAYER_RETENTION_DAYS:-14}
+      CHALLENGE_MARKET_RETENTION_DAYS: ${CHALLENGE_MARKET_RETENTION_DAYS:-30}
+      CHALLENGE_RUN_DUE_MIN_INTERVAL_S: ${CHALLENGE_RUN_DUE_MIN_INTERVAL_S:-10}
     volumes:
       - backend-data:/data
     expose:
       - "8000"
+    networks:
+      - default
+      - 1panel-network
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+        required: false
+      mysql:
+        condition: service_healthy
+        required: false
+
+  # 每日挑战的定时维护（03 §11.2）：无人在线时也按时生成、开局、结算、发奖与清理。
+  # 与 backend 同镜像、同环境变量；多实例幂等，可与 backend 并存。
+  challenge-runner:
+    image: stocksim-backend:local
+    command: ["stocksim-challenge", "loop", "--interval", "15"]
+    restart: unless-stopped
+    environment: *backend-env
+    volumes:
+      - backend-data:/data
     networks:
       - default
       - 1panel-network
@@ -92,6 +130,29 @@ services:
       backend:
         condition: service_healthy
 
+  # 真实复盘的定时抓存（05 §2.5）：财联社电报每 120 秒、东财个股新闻每 10 秒一只、北京时间 20:30 补抓当日公告/新闻联播。
+  # 默认不启动（profile collector）：docker compose --profile collector up -d --build replay-collector
+  # 与 backend 无依赖、不连数据库，只写 replay-data 卷；抓存规则与数据目录见 docs/deployment.md「复盘数据抓存」。
+  replay-collector:
+    profiles: ["collector"]
+    build:
+      context: ./backend
+      target: ingest
+      args:
+        PIP_INDEX_URL: ${PIP_INDEX_URL:-https://pypi.tuna.tsinghua.edu.cn/simple}
+    image: stocksim-ingest:local
+    restart: unless-stopped
+    command: ["python", "-m", "stocksim.replay_ingest", "collect", "--loop", "--interval", "120"]
+    environment:
+      REPLAY_DATA_DIR: /replay
+      # pool = 股票池中的真实 A 股代码（约 384 只，排除彩蛋 999999）；也可写逗号分隔的 6 位代码
+      REPLAY_COLLECT_UNIVERSE: ${REPLAY_COLLECT_UNIVERSE:-pool}
+      # requests 与 curl_cffi 读取的代理（东财、财联社经 requests 访问）；留空即直连
+      HTTP_PROXY: ${HTTP_PROXY:-}
+      HTTPS_PROXY: ${HTTPS_PROXY:-}
+    volumes:
+      - replay-data:/replay
+
   postgres:
     profiles: ["postgres"]
     image: postgres:17-alpine
@@ -132,6 +193,8 @@ volumes:
   backend-data:
   postgres-data:
   mysql-data:
+  # 真实复盘原始数据（replay-collector 写入，仅由离线构建使用，不进运行时）
+  replay-data:
 
 # 1Panel 创建的外部网络：migrate/backend 加入后可直接用容器名连接 1Panel 里的数据库
 # （DATABASE_URL 主机名写 1Panel 数据库容器名）。服务器上需已存在该网络（装过 1Panel 即有）；

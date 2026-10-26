@@ -1,5 +1,6 @@
 /**
  * 自动交易（#/auto）—— 对应 /saves/{id}/auto-trade/*
+ *   - 二级页（tab=null，无 Dock）：入口在“我的”页的“自动交易”行，顶栏“返回 + 标题 + 新建规则”；
  *   - 状态卡：运行/暂停/停止控制 + 次数进度 + 成功/失败/累计盈亏（AutoStatusOut）；
  *   - 规则卡片（AutoConfigOut）：一句话描述条件 + 开关；点卡片编辑；
  *   - 新建/编辑规则抽屉：字段与 AutoConfigIn 一致，前端按其校验规则预检；
@@ -33,10 +34,24 @@
     const store = SS.store;
     const fmt = SS.fmt;
 
+    const back = html`<button type="button" class="icon-btn" data-role="back" aria-label="返回">${SS.icon("back")}</button>`;
+    // 挑战存档（⑦）里自动交易不可用
+    if (store.state.save.mode === "challenge") {
+      SS.mount(
+        view,
+        html`<header class="topbar topbar--sub">${back}<h1 class="topbar__title topbar__title--sub">自动交易</h1></header>
+          <section class="soon-card"><div class="soon-card__head"><h2 class="soon-card__title">挑战中不可用自动交易</h2></div>
+          <p class="soon-card__desc t2 sm">每日挑战里所有玩家用同样的规则交易，结束挑战回到普通存档后即可使用。</p></section>`
+      );
+      SS.$('[data-role="back"]', view).addEventListener("click", SS.router.back);
+      return null;
+    }
+
     SS.mount(
       view,
-      html`<header class="topbar">
-          <h1 class="topbar__title">自动交易</h1>
+      html`<header class="topbar topbar--sub">
+          ${back}
+          <h1 class="topbar__title topbar__title--sub">自动交易</h1>
           <button type="button" class="btn btn-sm btn-primary" data-role="new">${SS.icon("plus")}新建规则</button>
         </header>
         <section class="card auto-status" data-role="status"></section>
@@ -49,6 +64,7 @@
         <div class="card card--flush" data-role="events"></div>`
     );
     const $ = (r) => SS.$(`[data-role="${r}"]`, view);
+    $("back").addEventListener("click", SS.router.back);
 
     function paintStatus() {
       const s = store.state.auto.status;
@@ -169,7 +185,7 @@
             <span class="event-row__icon ${e.success ? "is-ok" : "is-fail"}">${SS.icon(e.success ? "check" : "close")}</span>
             <div class="event-row__main">
               <div>${q ? q.name : e.stock_code} · ${DIR[e.direction]} <span class="t3 xs">${COND[e.condition_type]}</span></div>
-              <div class="xs t3">${e.success ? html`成交 <span class="num">${fmt.yuanCompact(e.amount_cents, { symbol: true })}</span>` : store.errorText(e.reason_code)} · D${e.trading_day}</div>
+              <div class="xs t3">${e.success ? html`成交 <span class="num">${fmt.yuanCompact(e.amount_cents, { symbol: true })}</span>` : store.errorText(e.reason_code)} · D${fmt.dayNo(e.trading_day)}</div>
             </div>
             <div class="num sm ${e.pnl_cents ? fmt.trend(e.pnl_cents) : "t3"}">${e.pnl_cents ? fmt.yuan(e.pnl_cents, { sign: true }) : "—"}</div>
           </div>`;
@@ -493,5 +509,5 @@
   }
 
   SS.pages = SS.pages || {};
-  SS.pages.auto = { tab: "auto", render };
+  SS.pages.auto = { tab: null, render };
 })();

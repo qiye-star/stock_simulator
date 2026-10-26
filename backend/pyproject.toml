@@ -17,6 +17,7 @@ dependencies = [
 
 [project.scripts]
 stocksim = "stocksim.main:run"
+stocksim-challenge = "stocksim.cli_challenge:main"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -44,4 +45,7 @@ build-backend = "uv_build"
 dev = [
     "pytest>=9.1.1",
     "ruff>=0.17.2",
+]
+ingest = [
+    "akshare>=1.19,<2",
 ]

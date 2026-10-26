@@ -4,20 +4,22 @@
  *   - 胶囊面板 + 图标 + 标签；
  *   - 按下时图标弹性放大（magnification 的触屏化）；
  *   - 选中项下方的强调色指示点，以及滑动的高亮底板。
- * 二级页（如个股详情）调用 setActive(null) 隐藏 Dock。
+ * 5 个入口：行情 / 快讯 / 持仓 / 玩法 / 我的；二级页（如个股详情、自动交易）调用 setActive(null) 隐藏 Dock。
  */
 (function () {
   const SS = (window.SS = window.SS || {});
   const ITEMS = [
     { tab: "market", label: "行情", icon: "market", path: "/market" },
-    { tab: "portfolio", label: "持仓", icon: "portfolio", path: "/portfolio" },
-    { tab: "auto", label: "自动", icon: "auto", path: "/auto" },
+    { tab: "news", label: "快讯", icon: "news", path: "/news" },
+    { tab: "portfolio", label: "持仓", icon: "pie", path: "/portfolio" },
+    { tab: "play", label: "玩法", icon: "games", path: "/play" },
     { tab: "me", label: "我的", icon: "me", path: "/me" },
   ];
   let root = null;
 
   function mount(el) {
     root = el;
+    el.style.setProperty("--dock-n", ITEMS.length); // 等分列数与高亮底板宽度都读它
     SS.mount(
       el,
       SS.html`<nav class="dock__panel" aria-label="主导航">

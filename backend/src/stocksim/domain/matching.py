@@ -13,7 +13,7 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from typing import Any
 
-from .clock import is_trading_time
+from .clock import is_order_time
 from .errors import (
     MARKET_CLOSED,
     ORDER_LIMIT_NOT_REACHED,
@@ -56,7 +56,8 @@ def _check_limit_price(request: OrderRequest, quote: Quote) -> int:
         raise DomainError(VALIDATION_ERROR, {"field": "limit_price_cents"})
     market = quote.price_cents
     prev = quote.prev_close_cents
-    up, down = limit_up_cents(prev), limit_down_cents(prev)
+    up = limit_up_cents(prev, quote.limit_pct_bp)
+    down = limit_down_cents(prev, quote.limit_pct_bp)
     if limit > up or limit < down:
         raise DomainError(
             TRADE_PRICE_OUT_OF_LIMIT,
@@ -105,7 +106,7 @@ def execute_order(
     if request.price_type not in ("market", "limit"):
         raise DomainError(VALIDATION_ERROR, {"field": "price_type"})
     validate_quantity(request.quantity, settings.trade_unit)
-    if not is_trading_time(minute_of_day):
+    if not is_order_time(minute_of_day, settings.clock_rules):
         raise DomainError(MARKET_CLOSED, {"minute_of_day": minute_of_day})
     if quote.circuit_breaker_active:
         raise DomainError(TRADE_CIRCUIT_BREAKER_ACTIVE, {"code": quote.code})

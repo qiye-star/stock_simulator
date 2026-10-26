@@ -21,32 +21,37 @@ MAX_PRICE_CENTS = 1_000_000_000  # legacy price ≤ 1e7 元
 VALID_TRADE_UNITS = (1, 100)
 
 
-def limit_up_cents(prev_close_cents: int) -> int:
-    """涨停价（分），四舍五入到分。"""
-    return round_half_up_div(prev_close_cents * (BP_DENOMINATOR + LIMIT_PCT_BP), BP_DENOMINATOR)
+def limit_up_cents(prev_close_cents: int, pct_bp: int = LIMIT_PCT_BP) -> int:
+    """涨停价（分），四舍五入到分。pct_bp 为板块涨跌幅（基点），默认主板 10%。"""
+    return round_half_up_div(prev_close_cents * (BP_DENOMINATOR + pct_bp), BP_DENOMINATOR)
 
 
-def limit_down_cents(prev_close_cents: int) -> int:
+def limit_down_cents(prev_close_cents: int, pct_bp: int = LIMIT_PCT_BP) -> int:
     """跌停价（分），四舍五入到分。"""
-    return round_half_up_div(prev_close_cents * (BP_DENOMINATOR - LIMIT_PCT_BP), BP_DENOMINATOR)
+    return round_half_up_div(prev_close_cents * (BP_DENOMINATOR - pct_bp), BP_DENOMINATOR)
 
 
-def is_within_limits(price_cents: int, prev_close_cents: int) -> bool:
-    return limit_down_cents(prev_close_cents) <= price_cents <= limit_up_cents(prev_close_cents)
-
-
-def clamp_to_limits(price_cents: int, prev_close_cents: int) -> int:
-    return min(
-        max(price_cents, limit_down_cents(prev_close_cents)), limit_up_cents(prev_close_cents)
+def is_within_limits(price_cents: int, prev_close_cents: int, pct_bp: int = LIMIT_PCT_BP) -> bool:
+    return (
+        limit_down_cents(prev_close_cents, pct_bp)
+        <= price_cents
+        <= limit_up_cents(prev_close_cents, pct_bp)
     )
 
 
-def is_limit_up(price_cents: int, prev_close_cents: int) -> bool:
-    return price_cents == limit_up_cents(prev_close_cents)
+def clamp_to_limits(price_cents: int, prev_close_cents: int, pct_bp: int = LIMIT_PCT_BP) -> int:
+    return min(
+        max(price_cents, limit_down_cents(prev_close_cents, pct_bp)),
+        limit_up_cents(prev_close_cents, pct_bp),
+    )
 
 
-def is_limit_down(price_cents: int, prev_close_cents: int) -> bool:
-    return price_cents == limit_down_cents(prev_close_cents)
+def is_limit_up(price_cents: int, prev_close_cents: int, pct_bp: int = LIMIT_PCT_BP) -> bool:
+    return price_cents == limit_up_cents(prev_close_cents, pct_bp)
+
+
+def is_limit_down(price_cents: int, prev_close_cents: int, pct_bp: int = LIMIT_PCT_BP) -> bool:
+    return price_cents == limit_down_cents(prev_close_cents, pct_bp)
 
 
 def breaker_move_exceeded(new_price_cents: int, prev_price_cents: int) -> bool:

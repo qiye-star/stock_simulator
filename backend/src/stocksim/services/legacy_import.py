@@ -24,6 +24,7 @@ from sqlalchemy.orm import Session
 from stocksim.core.errors import AppError, ErrorCode
 from stocksim.db.base import utcnow
 from stocksim.domain.achievements.catalog import CATALOG_BY_ID
+from stocksim.domain.clock import CLOCK_RULES_V1
 from stocksim.models import (
     Holding,
     LegacyImport,
@@ -235,6 +236,10 @@ def _build_save(
         tick=0,
         trade_seq=len(trades),
         trading_day=DEFAULT_TRADING_DAY,
+        # 旧版导入的行情为全新生成，按新存档处理；规则版本固定 v1（v2 只在显式请求时启用）
+        clock_rules=CLOCK_RULES_V1,
+        events_enabled=False,  # 旧版导入一律关闭事件模式（01 §3）
+        events_ruleset=0,
         clock_minute=DEFAULT_CLOCK_MINUTE,
         paused=False,
         auto_enabled=False,

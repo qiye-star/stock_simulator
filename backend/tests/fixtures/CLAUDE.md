@@ -12,6 +12,7 @@
 - `make_legacy_export.py` 生成器（`build_sample()` 与 `encode_legacy()`，编码与 legacy/crypto.js 等价）。
 - `legacy_sample.json` 明文样例（用户 legacy_bob，含 1 个存档：买入 100、卖出 50、一条自选、两个成就与一个无效成就 id）。
 - `legacy_export.txt` 导出文本样例（导入接口的 `content`）。
+- `replay/` 复盘管道的合成夹具（自带 CLAUDE.md，由 `replay/make_replay_fixture.py` 生成）。
 
 ## 常见任务
 - 重新生成：`cd backend && uv run python tests/fixtures/make_legacy_export.py`，再跑 `uv run pytest tests/integration/test_legacy_import.py -q`。

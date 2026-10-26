@@ -8,6 +8,7 @@
 
 from __future__ import annotations
 
+import uuid
 from collections.abc import Mapping
 from typing import Any
 
@@ -61,6 +62,50 @@ def record_close_snapshot(
     closes = {s["code"]: int(s["history"][-2]["close"]) for s in state["stocks"]}
     market_value = sum(qty * closes.get(code, 0) for code, qty in quantities.items())
     upsert_snapshot(db, save, closing_day, save.cash_cents, market_value, tick)
+
+
+def record_entries_close(
+    db: Session,
+    master: Save,
+    closing_day: int,
+    state: Mapping[str, Any],
+    tick: int,
+) -> None:
+    """挑战 master 跨交易日时，为全部玩家挑战存档写入 closing_day 的收盘快照（03 §7.2）。
+
+    一条查询取 market_source_id == master.id 的玩家 (id, cash)，一条查询取持仓，批量 insert。
+    各玩家持仓在批次内不变（玩家只在 master 停在当前 tt 时交易），按 master 的收盘价估值。
+    唯一键 (save_id, trading_day) 冲突抛 IntegrityError，由调用方 market._retrying 整体回滚重算。
+    """
+    players = db.execute(
+        select(Save.id, Save.cash_cents).where(Save.market_source_id == master.id)
+    ).all()
+    if not players:
+        return
+    closes = {s["code"]: int(s["history"][-2]["close"]) for s in state["stocks"]}
+    market_values: dict[Any, int] = {}
+    holdings = db.execute(
+        select(Holding.save_id, Holding.stock_code, Holding.quantity).where(
+            Holding.save_id.in_([pid for pid, _ in players]), Holding.quantity > 0
+        )
+    )
+    for save_id, code, qty in holdings:
+        market_values[save_id] = market_values.get(save_id, 0) + qty * closes.get(code, 0)
+    rows = []
+    for pid, cash in players:
+        market_value = market_values.get(pid, 0)
+        rows.append(
+            {
+                "id": uuid.uuid4(),
+                "save_id": pid,
+                "trading_day": closing_day,
+                "cash_cents": cash,
+                "market_value_cents": market_value,
+                "equity_cents": cash + market_value,
+                "tick": tick,
+            }
+        )
+    db.execute(EquitySnapshot.__table__.insert(), rows)
 
 
 def equity_curve(

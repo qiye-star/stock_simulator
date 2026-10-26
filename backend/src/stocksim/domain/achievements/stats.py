@@ -6,7 +6,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any
 
-from ..clock import is_early_bird_window, is_night_owl_window
+from ..clock import CLOCK_RULES_V1, is_early_bird_window, is_night_owl_window
 from ..money import BP_DENOMINATOR, is_palindrome
 from ..rules import is_limit_down, is_limit_up
 from ..types import Holding
@@ -55,8 +55,12 @@ def compute_stats(
     fund_cents: int,
     initial_fund_cents: int,
     watchlist_count: int = 0,
+    clock_rules: int = CLOCK_RULES_V1,
 ) -> AchievementStats:
-    """prices: {code: 当前价（分）}，用于估算持仓市值与收益率；缺失则按成本计。"""
+    """prices: {code: 当前价（分）}，用于估算持仓市值与收益率；缺失则按成本计。
+
+    clock_rules: 时间窗口口径（早盘/夜猫窗口随版本变化）；同一存档内所有成交的规则相同。
+    """
     market_value = sum(
         h.quantity * prices.get(code, h.avg_cost_cents) for code, h in holdings.items()
     )
@@ -112,9 +116,9 @@ def compute_stats(
             large += 1
         if price % ROUND_NUMBER_UNIT == 0:
             round_num += 1
-        if is_early_bird_window(minute):
+        if is_early_bird_window(minute, clock_rules):
             early += 1
-        if is_night_owl_window(minute):
+        if is_night_owl_window(minute, clock_rules):
             late += 1
         if side == "buy":
             bought_by_day_code[key] = bought_by_day_code.get(key, 0) + qty_t

@@ -12,7 +12,7 @@ from stocksim.domain.rules import sellable_quantity
 from stocksim.models import Save, Trade
 from stocksim.services.equity import equity_curve
 from stocksim.services.market import load_market
-from stocksim.services.stocks import get_stock_info
+from stocksim.services.stocks import stock_info_for
 from stocksim.services.trading import load_holdings, today_trade_refs
 
 
@@ -51,7 +51,7 @@ def portfolio_view(db: Session, save: Save) -> dict[str, Any]:
         market_value = held.quantity * price
         cost = held.total_cost_cents
         pnl = market_value - cost
-        info = get_stock_info(code)
+        info = stock_info_for(db, save, code)
         market_value_total += market_value
         holdings_out.append(
             {

@@ -19,3 +19,6 @@
 | `legacy.py` | `POST /import/legacy` | 旧版存档导入 |
 | `debug.py` | `POST /saves/{id}/debug/fund｜time｜achievements｜reset-market｜clear` | 调试（需 `ENABLE_DEBUG_API=true`） |
 | `ws.py` | `WS /api/v1/ws/saves/{id}` | 行情与事件推送（cookie 鉴权） |
+| `challenges.py` | `GET /challenges/today`、`GET /challenges`、`GET /challenges/{id}`、`POST /challenges/{id}/entry`、`GET /challenges/{id}/rounds`、`PUT /challenges/{id}/rounds/{n}/answer`、`GET /challenges/{id}/leaderboard`、`GET /challenge-leaderboard`、`GET /challenges/{id}/reveal`、`GET /challenges/{id}/review` | 每日挑战（需登录） |
+| `debug_challenges.py` | `POST /debug/challenges/ensure`、`POST /debug/challenges/{id}/shift` | 挑战调试（需 `ENABLE_DEBUG_API=true`） |
+| `replay.py` | `/api/v1/replay/*`：关卡、复盘会话（建、推进、结束）、事件流、预测题、基准、揭示 | 真实复盘（需登录） |
