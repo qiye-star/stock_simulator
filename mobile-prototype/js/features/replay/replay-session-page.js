@@ -86,6 +86,7 @@
       const basis = M().basisText(phase);
       const holding = pf.holdings.find((h) => h.code === quote.code) || null;
       const sellable = holding ? holding.sellable_quantity : 0;
+      const sellWhy = M().sellBlockedText(phase, quote, holding, sellable);
       const today = feed.filter((x) => x.trading_day === sess.day_idx);
       const nextLabel = M().nextActionLabel(sess.tick, sess.play_days);
       const ttl = SS.$('[data-role="ttl"]', view);
@@ -124,9 +125,11 @@
             </div>
             <div class="replay-trade__btns">
               <button type="button" class="btn replay-btn-buy" data-act="buy" ${tradable ? "" : "disabled"}>${tradable ? `按${basis}买入` : "买入"}</button>
-              <button type="button" class="btn" data-act="sell" ${tradable && sellable > 0 ? "" : "disabled"}>卖出</button>
+              <div class="replay-sell">
+                <button type="button" class="btn" data-act="sell" ${tradable && sellable > 0 ? "" : "disabled"}>卖出</button>
+                ${sellWhy ? html`<span class="replay-sell__why t3 xs" data-role="sell-why">${sellWhy}</span>` : ""}
+              </div>
             </div>
-            ${tradable && holding && sellable === 0 ? html`<p class="t3 xs">今天买入的股票明天才能卖出（T+1）</p>` : ""}
             ${suspended ? html`<p class="t3 xs">该股票今天停牌，恢复交易后可买卖。</p>` : ""}
           </section>
           <div class="replay-foot" data-role="foot">

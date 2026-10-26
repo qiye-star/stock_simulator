@@ -9,7 +9,7 @@
 | `model.js` | `SS.newsModel`（纯函数）：`mergeNews`（去重、倒序、截断）、`matchesFilter`（全部/重大/我的持仓/政策/传闻）、`filterFromQuery`（`?filter=` 合法值）、`groupByDay`、`newsTags`、`propWindow`（传导窗口 3 日、已走天数、默认日）、`propSteps`（按日截止的节点与步骤）、`chainView`（上游/下游/同题材）、`revealText`、`suggestIndustries`、`defaultFocus`、`pickStrip`、`dayMajors`、`relatedQuotes`（事件相关分段与注记）、`klineMarks`（标记按 `trading_day` 对齐日 K 下标）、`markLegend`（图例行）、`constituents`（行业成分股，按代码升序、带 total）|
 | `store.js` | `ensureNews({force})`、`newsFeed()`、`majorNews()`、`listNews`、`listEvents`、`loadEvent`、`loadEventMarks(code, days)`（K 线标记；mock 与后端同口径）、`loadSupplyChain({force})`，以及共用的 `newsEnabled()`、`resetNews()`。mock 与 real 同名；real 经 `guarded()` |
 | `news-page.js` | `#/news`（快讯 tab）：过滤胶囊（深链 `#/news?filter=rumor` 直接选中，非法值保持上次选择）、按交易日分组、重大整卡、分页（全部/重大走服务端，其它前端过滤并续拉至多 5 页）、WS 实时插入顶部 |
-| `event-page.js` | `#/event/:id`：头部标签与标题、传导回放（日 tab、节点按 `arrived_trading_day` 显示、未来日禁用）、锁提示（`event.intel` 槽，缺省“看产业链”）、后续快讯、`event.footer` 槽 |
+| `event-page.js` | `#/event/:id`：头部标签、标题与摘要（`M.eventSummary`：首条快讯标题，或事发行业+波及数，不改后端）、传导回放（横向链路：事发节点→箭头（关系·强度）→节点，窄屏换行；日 tab、节点按 `arrived_trading_day` 显示、未来日禁用）、锁提示（`event.intel` 槽，缺省“看产业链”）、后续快讯、`event.footer` 槽 |
 | `chain-page.js` | `#/chain?focus=`：行业搜索（候选）、上游/下游/同题材、未揭示的边显示锁（`chain.edgeAction` 槽）、已揭示显示强度/滞后；切换焦点用 `router.replace`；点中心行业打开**行业抽屉**（`SS.sheet`）：成分股（`loadAllQuotes` 过滤，龙头有标记，点行进个股）、关联（只显示谁连着谁，不含强度/滞后，点行切焦点）、最近快讯（`listNews({industry, limit:5})`，无则隐藏）|
 | `index.js` | 注册 routes；挂载 `market.banner`（快讯条）、`closeSummary.extra`（今天的大事，最多 2 条）、`stock.extra`（相关事件，最近 5 条）、`stock.kline`（日 K 下方事件标记：`.kmark` 点 + 最近 5 条图例，点击进事件详情；按（代码, 交易日）缓存，快讯 WS 与切存档清空）；`marketLists` “事件相关”（事件详情→已到达的行业股票，事发/传导注记）；订阅 `ws:news`（合并缓存、`news:update`、重大 toast、truncated 时强制重拉首屏）；mock 模式按队列推送 |
 

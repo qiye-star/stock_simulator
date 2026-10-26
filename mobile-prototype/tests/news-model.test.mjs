@@ -257,4 +257,13 @@ export default function (SS, assert, t) {
     const two = { "银行>房地产": { revealed_level: 2, strength: 2, lag_days: 1 }, "钢铁>房地产": { revealed_level: 2, strength: 1, lag_days: 0 } };
     assert.equal(M.lockText(steps, two), "已走到的边强度和滞后都已揭示");
   });
+
+  t("事件摘要：优先首条快讯标题（与事件标题不同），否则用事发行业与波及数", () => {
+    const d = { title: "锂矿停产", source_industry: "锂矿", news: [{ title: "锂矿停产整改，供给约占 8%" }], propagation: [{ hop: 0 }, { hop: 1 }, { hop: 2 }] };
+    assert.equal(M.eventSummary(d), "锂矿停产整改，供给约占 8%");
+    assert.equal(M.eventSummary({ ...d, news: [{ title: "锂矿停产" }] }), "事发于锂矿，已波及 2 个行业");
+    assert.equal(M.eventSummary({ ...d, news: [{ title: "锂矿停产" }], propagation: [{ hop: 0 }] }), "事发于锂矿");
+    assert.equal(M.eventSummary({ title: "x", news: [], propagation: [] }), "");
+    assert.equal(M.eventSummary(null), "");
+  });
 }

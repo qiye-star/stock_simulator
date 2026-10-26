@@ -283,4 +283,14 @@ export default function (SS, assert, t) {
     assert.equal(R.canTrade("pre_open", { suspended: false }), false);
     assert.equal(R.canTrade("post_close", { suspended: false }), false);
   });
+
+  t("卖出置灰原因：停牌 > 阶段不能交易 > 未持有 > T+1，可卖为空串", () => {
+    const H = { quantity: 100, sellable_quantity: 0 };
+    assert.equal(R.sellBlockedText("open", { suspended: true }, H, 0), "停牌");
+    assert.equal(R.sellBlockedText("pre_open", {}, H, 0), "盘前不能卖");
+    assert.equal(R.sellBlockedText("post_close", {}, null, 0), "盘后不能卖");
+    assert.equal(R.sellBlockedText("close", {}, null, 0), "未持有");
+    assert.equal(R.sellBlockedText("close", {}, H, 0), "今日买入，明日可卖");
+    assert.equal(R.sellBlockedText("open", {}, { quantity: 100, sellable_quantity: 100 }, 100), "");
+  });
 }

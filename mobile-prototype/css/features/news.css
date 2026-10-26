@@ -189,11 +189,21 @@
   align-items: center;
   gap: 6px;
 }
+.event-head__sum {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+}
 .event-head__title {
   margin: 0;
   font-size: 19px;
   font-weight: 700;
   line-height: 1.4;
+}
+.prop-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 .prop-card__head {
   display: flex;
@@ -208,24 +218,37 @@
 }
 .prop-steps {
   display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.prop-step {
-  display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 6px;
-  padding-left: calc(var(--hop, 0) * 18px);
+  gap: 8px 0;
+}
+.prop-step {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   min-width: 0;
 }
-.prop-step__from {
-  font-size: 12px;
-  color: var(--text-2);
-}
-.prop-step__rel {
-  font-size: 12px;
+.prop-arrow {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  max-width: 68px;
+  padding: 0 2px;
+  font-size: 11px;
+  line-height: 1.3;
   color: var(--text-3);
+  text-align: center;
+}
+.prop-arrow__from,
+.prop-arrow__rel {
+  overflow-wrap: anywhere;
+}
+.prop-arrow__glyph {
+  font-size: 14px;
+  line-height: 1;
+  color: var(--text-2);
 }
 .prop-node {
   display: inline-flex;
@@ -233,9 +256,9 @@
   align-items: center;
   justify-content: center;
   gap: 2px;
-  min-width: 72px;
+  min-width: 64px;
   min-height: 50px;
-  padding: 6px 10px;
+  padding: 6px 8px;
   border-radius: var(--r-md);
   border: 1px solid var(--line-strong);
   background: var(--bg-2);
@@ -271,7 +294,6 @@
 .prop-days {
   display: flex;
   gap: 6px;
-  margin-top: 4px;
 }
 .prop-days__tab {
   flex: 1;

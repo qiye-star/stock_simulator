@@ -102,20 +102,27 @@
           ${first ? html`<span class="num t2 xs">第 ${SS.fmt.dayNo(d.trading_day)} 个交易日 ${M.clockText(first.clock_minute)}</span>` : ""}
         </div>
         <h1 class="event-head__title">${d.title}</h1>
+        ${M.eventSummary(d) ? html`<p class="event-head__sum t2">${M.eventSummary(d)}</p>` : ""}
       </div>`;
     }
 
+    /** 横向链路：事发节点 → 箭头（关系、揭示强度）→ 节点……；窄屏自动换行。来源不是上一节点时箭头上注明来源行业 */
     function graphHtml(d, cur) {
       const steps = M.propSteps(d, day);
       if (!steps.length) return html`<p class="t3 sm prop-empty">${day > cur ? "这一天还没有节点到达" : "暂无可传导的行业节点"}</p>`;
       const rev = revealMap();
-      return html`<div class="prop-steps">${steps.map((s) => {
-        const rv = s.source ? "" : M.revealText(M.revealOf(rev, s));
-        return s.source
-          ? html`<div class="prop-step prop-step--source"><span class="prop-node prop-node--source"><span class="prop-node__name">${s.industry}</span><span class="xs t2">事发</span></span></div>`
-          : html`<div class="prop-step" style="--hop:${s.hop}">
-              <span class="prop-step__from">${s.from || "—"}</span>
-              <span class="prop-step__rel">${s.relation_text}${rv ? html` · <span class="num">${rv}</span>` : ""}<span aria-hidden="true"> ›</span></span>
+      return html`<div class="prop-steps">${steps.map((s, i) => {
+        if (s.source)
+          return html`<div class="prop-step prop-step--source"><span class="prop-node prop-node--source"><span class="prop-node__name">${s.industry}</span><span class="xs t2">事发</span></span></div>`;
+        const rv = M.revealText(M.revealOf(rev, s));
+        const via = s.from && s.from !== (steps[i - 1] && steps[i - 1].industry) ? s.from : "";
+        const label = [s.relation_text, rv].filter(Boolean).join(" · ");
+        return html`<div class="prop-step">
+              <span class="prop-arrow" aria-hidden="true">
+                ${via ? html`<span class="prop-arrow__from">自${via}</span>` : ""}
+                ${label ? html`<span class="prop-arrow__rel num">${label}</span>` : ""}
+                <span class="prop-arrow__glyph">→</span>
+              </span>
               <span class="prop-node prop-node--${s.tone}"><span class="prop-node__name">${s.industry}</span><span class="prop-node__v num">${s.change_bp == null ? "—" : SS.fmt.pctBp(s.change_bp)}</span></span>
             </div>`;
       })}</div>`;

@@ -4,7 +4,7 @@
 | --- | --- | --- |
 | `effects.js` | SpotlightCard / AnimatedList / BlurText（ShinyText、Aurora 只有 CSS） | `.spotlight-card`（全局委托）、`SS.animatedList(container)`、`SS.blurText(text)` |
 | `dock.js` | Dock（触屏版，5 项：行情/快讯/持仓/玩法/我的） | `SS.dock.mount(el)` / `setActive(tab|null)`；等分列数读 `--dock-n` |
-| `trade-bar.js` | — | `SS.tradeBar.mount(el, {variant: "full"\|"compact"})` 返回卸载函数；`SS.tradeBar.setOverlay(key, overlay\|null)`（预测卡/挑战等覆盖文案）。唯一数据源 `store.state.clock` → `SS.clockModel`；点开 `SS.clockHelp.open()`；暂停时“继续”、v1 非交易时段“跳到开盘”按钮 |
+| `trade-bar.js` | — | `SS.tradeBar.mount(el, {variant: "full"\|"compact"})` 返回卸载函数；`SS.tradeBar.setOverlay(key, overlay\|null)`（预测卡/挑战等覆盖文案；overlay 写了 `action` 键即接管动作区，值为 `null` 时隐藏按钮，挑战存档运行中如此）。唯一数据源 `store.state.clock` → `SS.clockModel`；点开 `SS.clockHelp.open()`；暂停时“继续”、v1 非交易时段“跳到开盘”按钮 |
 | `clock-help.js` | — | `SS.clockHelp.open({focus})` 交易时间说明底部弹层（时间线、三张规则卡、速度三档）；`maybeAutoOpen()` 首次进入弹一次，记忆键 `localStorage["ss.clockHelp"]` = 规则版本（v1/v2），localStorage 全部 try/catch |
 | `close-summary.js` | — | `SS.closeSummary.watch()`（订阅 phase/tick/save，v2 收盘自动弹出，每交易日一次）、`open({tradingDay?})` / `close()`、`mountRecap(el)`（行情页“查看昨日小结 ›”条，记录键 `localStorage["ss.lastDay.<saveId>"]`）。数据 `store.loadDaySummary`；倒计时只经 `SS.clockModel.closeTimer`；“现在就开盘”= 恢复 + `skipClock()`，“先暂停”= `setPaused(true)`；z-index 30（高于 Dock、低于抽屉）；不响应遮罩点击 |
 | `soon-card.js` | — | `SS.soonCardHtml({title, desc})` / `SS.soonCard(host, opts)`：“即将开放”占位卡（功能未上线或接口 404 时） |
