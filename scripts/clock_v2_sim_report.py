@@ -13,7 +13,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import math
 import statistics
 import sys
 import time
@@ -110,7 +109,7 @@ def simulate(seed: int, days: int) -> dict[str, Any]:
         if state["breaker"]:
             breaker_triggers += 1
         if state["trading_day"] == before["trading_day"]:
-            for i, (sb, sa) in enumerate(zip(before["stocks"], state["stocks"], strict=True)):
+            for sb, sa in zip(before["stocks"], state["stocks"], strict=True):
                 volume_checks += 1
                 if int(sa["daily_volume"]) >= int(sb["daily_volume"]):
                     volume_ok += 1
@@ -224,17 +223,16 @@ def check(metrics: dict[str, float]) -> list[str]:
     bad: list[str] = []
     for name, (lo, hi) in TARGETS.items():
         v = metrics[name]
-        if name == "max_tick_move":
-            ok = v < hi
-        else:
-            ok = lo <= v <= hi
+        ok = v < hi if name == "max_tick_move" else lo <= v <= hi
         if not ok:
             bad.append(f"{name}={v:.6f} 不在 [{lo}, {hi}]")
     return bad
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     ap.add_argument("--seeds", type=int, default=3)
     ap.add_argument("--days", type=int, default=60)
     ap.add_argument("--check", action="store_true", help="越界时非零退出")
@@ -250,10 +248,7 @@ def main() -> int:
     print(f"{'指标':<24}{'值':>14}   目标")
     for name, (lo, hi) in TARGETS.items():
         v = m[name]
-        if name == "max_tick_move":
-            target = f"< {hi}"
-        else:
-            target = f"[{lo}, {hi}]"
+        target = f"< {hi}" if name == "max_tick_move" else f"[{lo}, {hi}]"
         flag = "OK" if (v < hi if name == "max_tick_move" else lo <= v <= hi) else "FAIL"
         print(f"{name:<24}{v:>14.6f}   {target}  {flag}")
     bad = check(m)

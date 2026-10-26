@@ -11,6 +11,7 @@
 | `event_sim_report.py` | 事件行情仿真调参报告（01 §12.3 指标） |
 | `e2e_smoke.py` | 端到端 HTTP 冒烟：注册、建存档、行情、买入、T+1 拦截、持仓、自选、自动交易条件单、导出，以及 v2 时钟一交易日循环（仅标准库） ；事件行情 `s_events`（v2 事件存档：产业链结构、快讯、事件详情、关闭存档 409）；预测卡 `s_predictions`；每日挑战 `s_challenge`（仅 `E2E_CHALLENGE=1`，需 compact 环境，见 `CLAUDE.md`）|
 | `pm_prior_report.py` | 预测市场分档公开基率先验（v2 仿真统计，`--check` 与 `BUCKET_PRIOR_PPM` 一致性校验） |
+| `pm_abuse_report.py` | 预测市场风控报表（04 §5.5）：读库输出可疑账户 CSV（往返、对倒配对、小号集中、胜率异常）；`--sample` 构造作弊样本自检。只报告不处罚 |
 | `clock_v2_sim_report.py` | 时钟 v2 波动标定报告（全量股票池、真实引擎，07 §4.3 指标；`--check` 越界非零退出） |
 
 ```bash

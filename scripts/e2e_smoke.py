@@ -5,10 +5,12 @@
     BASE_URL=http://localhost:18000 python3 scripts/e2e_smoke.py
 
 流程：注册随机用户 -> 建存档 -> 读行情 -> 买入 100 股 -> T+1 卖出应被拒绝 ->
-持仓 -> 加自选 -> 建自动交易条件单 -> 导出存档 -> v2 时钟一交易日循环 -> v2 事件存档（快讯/详情/关闭 409）。任一步失败则以非零码退出。
+持仓 -> 加自选 -> 建自动交易条件单 -> 导出存档 -> v2 时钟一交易日循环 -> v2
+事件存档（快讯/详情/关闭 409）。任一步失败则以非零码退出。
 若开局不在交易时段，会尝试调用 debug/time（需 ENABLE_DEBUG_API=true），否则该步记为 FAIL。
 
-每日挑战场景 s_challenge 与预测市场场景 s_prediction_market 只在 E2E_CHALLENGE=1 时执行（默认跳过并打印 SKIP），
+每日挑战场景 s_challenge 与预测市场场景 s_prediction_market 只在 E2E_CHALLENGE=1
+时执行（默认跳过并打印 SKIP），
 服务端需 CHALLENGE_SCHEDULE=compact CHALLENGE_MIN_ACCOUNT_AGE_HOURS=0 ENABLE_DEBUG_API=true
 CHALLENGE_SEED_KEY=<任意串>。预测市场场景使用明天（北京时间）的挑战日期，与 s_challenge 互不影响。
 """
@@ -25,8 +27,8 @@ import sys
 import time
 import urllib.error
 import urllib.request
-from datetime import datetime, timedelta, timezone
 from collections.abc import Callable
+from datetime import datetime, timedelta, timezone
 from typing import Any
 
 BASE_URL = os.environ.get("BASE_URL", "http://localhost:18000").rstrip("/")
@@ -86,7 +88,7 @@ def step(name: str):
                 detail = fn(state) or "ok"
                 _results.append((name, True, str(detail)))
                 return True
-            except Exception as exc:  # noqa: BLE001 - 冒烟脚本需要捕获一切并记录
+            except Exception as exc:  # 冒烟脚本需要捕获一切并记录
                 _results.append((name, False, f"{type(exc).__name__}: {exc}"))
                 return False
 
@@ -270,7 +272,10 @@ def s_events(state):
     sid = save["id"]
     chain = call("GET", f"/saves/{sid}/supply-chain")
     expect(len(chain.get("nodes", [])) == 82, f"supply nodes {len(chain.get('nodes', []))}")
-    expect(all(e.get("strength") is None for e in chain.get("edges", [])), "strength revealed by default")
+    expect(
+        all(e.get("strength") is None for e in chain.get("edges", [])),
+        "strength revealed by default",
+    )
     # 一交易日 8 次跳过（v2），最多 24 次，直到交易日 >= 2
     trading_day = 0
     for _ in range(24):
@@ -283,14 +288,23 @@ def s_events(state):
     expect(majors and all(i.get("major") for i in majors), "no major news after two trading days")
     event_id = majors[0]["event_id"]
     detail = call("GET", f"/saves/{sid}/events/{event_id}")
-    expect(detail.get("event_id") == event_id and detail.get("propagation") is not None, "event detail shape")
-    expect(detail["propagation"] and detail["propagation"][0]["hop"] == 0, "propagation hop 0 missing")
+    expect(
+        detail.get("event_id") == event_id and detail.get("propagation") is not None,
+        "event detail shape",
+    )
+    expect(
+        detail["propagation"] and detail["propagation"][0]["hop"] == 0,
+        "propagation hop 0 missing",
+    )
     closed = call("POST", "/saves", {"name": "closed", "clock_rules": 2})
     try:
         call("GET", f"/saves/{closed['id']}/news")
         raise AssertionError("closed save /news did not return 409")
     except HttpError as exc:
-        expect(exc.status == 409 and exc.code == "EVENTS_DISABLED", f"closed news {exc.status} {exc.code}")
+        expect(
+            exc.status == 409 and exc.code == "EVENTS_DISABLED",
+            f"closed news {exc.status} {exc.code}",
+        )
     state["events_save_id"] = sid
     return f"events save={sid} major_news={len(majors)} event={event_id}"
 
@@ -336,7 +350,11 @@ def s_predictions(state):
         answers["rank"] = {"order": qs["rank"]["candidates"][:3]}
     if "rumor" in qs:
         answers["rumor"] = {"probs": [50, 50]}
-    out = call("POST", f"/saves/{sid}/predictions/{card['id']}/answer", {"answers": answers, "resume": True})
+    out = call(
+        "POST",
+        f"/saves/{sid}/predictions/{card['id']}/answer",
+        {"answers": answers, "resume": True},
+    )
     expect(out["card"]["status"] == "answered", "card not answered")
     expect(out["clock"]["paused"] is False, "clock still paused after resume=true answer")
 
@@ -357,7 +375,10 @@ def s_predictions(state):
 
     edge = call("GET", f"/saves/{sid}/supply-chain")["edges"][0]["id"]
     bought = call("POST", f"/saves/{sid}/intel/edges", {"edge_id": edge, "level": 1})
-    expect(bought["charged"] == 100 and bought["balance"] == balance - 100, f"intel purchase {bought}")
+    expect(
+        bought["charged"] == 100 and bought["balance"] == balance - 100,
+        f"intel purchase {bought}",
+    )
     after = next(e for e in call("GET", f"/saves/{sid}/supply-chain")["edges"] if e["id"] == edge)
     expect(after["strength"] is not None, "edge strength not revealed after L1")
 
@@ -366,7 +387,10 @@ def s_predictions(state):
         call("GET", f"/saves/{closed['id']}/predictions")
         raise AssertionError("closed save /predictions did not return 409")
     except HttpError as exc:
-        expect(exc.status == 409 and exc.code == "EVENTS_DISABLED", f"closed predictions {exc.status} {exc.code}")
+        expect(
+            exc.status == 409 and exc.code == "EVENTS_DISABLED",
+            f"closed predictions {exc.status} {exc.code}",
+        )
     return f"save={sid} card={first_id} points={settled['points']} balance={bought['balance']}"
 
 
@@ -519,7 +543,8 @@ def s_challenge(state):
 
 @step("prediction market: open -> quote -> trade (idempotent) -> sell -> settle -> ledger")
 def s_prediction_market(state):
-    """预测市场（04 §11.4）：注册 → ensure（明天的挑战）→ 开市 → 报价 → 带幂等键买 2 份 → 重复提交得 replayed
+    """预测市场（04 §11.4）：注册 → ensure（明天的挑战）→ 开市 → 报价 → 带幂等键买 2 份 →
+    重复提交得 replayed
     → 卖 1 份 → shift 快进到结算 → 结算记录 ≥ 1 条 → 积分余额与流水末条 balance_after 相符。"""
     tz8 = timezone(timedelta(hours=8))
     day = (datetime.now(tz8).date() + timedelta(days=1)).isoformat()
@@ -534,7 +559,8 @@ def s_prediction_market(state):
         call("POST", "/debug/prediction-markets/sync", opener=opener)
         page = call("GET", f"/prediction-markets?challenge_id={cid}&status=open", opener=opener)
         items = page["items"]
-        return next((m for m in items if m["kind"] == "bucket"), None) or (items[0] if items else None)
+        bucket = next((m for m in items if m["kind"] == "bucket"), None)
+        return bucket or (items[0] if items else None)
 
     market = _poll(open_market, 40, "open prediction market")
     mid = market["id"]
@@ -578,13 +604,19 @@ def s_prediction_market(state):
         return page if page["items"] else None
 
     page = _poll(settled, 40, "prediction settlement after shift")
-    expect(any(item["market_id"] == mid for item in page["items"]), "settlement for our market missing")
+    expect(
+        any(item["market_id"] == mid for item in page["items"]),
+        "settlement for our market missing",
+    )
     ledger = call("GET", "/points/ledger", opener=opener)
     balance = call("GET", "/points", opener=opener)["balance"]
     expect(ledger["items"][0]["balance_after"] == balance,
            f"ledger balance_after {ledger['items'][0]['balance_after']} != balance {balance}")
     state["prediction_challenge_id"] = cid
-    return f"market={mid} quote={quote['points']} replay=ok sell={sell['trade']['points']} settled=ok"
+    return (
+        f"market={mid} quote={quote['points']} replay=ok "
+        f"sell={sell['trade']['points']} settled=ok"
+    )
 
 
 @step("replay: list → session → open buy → questions → settle → reveal")
@@ -612,7 +644,10 @@ def s_replay(state: dict[str, Any]) -> str:
     expect(trade["clock_minute"] == 570, "open-phase order not at 570")
     stop = call("POST", f"/replay/sessions/{sid}/advance",
                 {"to": "next_day", "expected_tick": session()["tick"]})
-    expect(stop["stopped_reason"] == "question_open", f"expected question_open, got {stop['stopped_reason']}")
+    expect(
+        stop["stopped_reason"] == "question_open",
+        f"expected question_open, got {stop['stopped_reason']}",
+    )
     questions = call("GET", f"/replay/sessions/{sid}/questions")["items"]
     expect(len(questions) == 2, "expected two open questions on day 1")
     for question in questions:
@@ -632,7 +667,10 @@ def s_replay(state: dict[str, Any]) -> str:
     expect(session()["status"] == "settled", "game did not settle")
     expect(sorted(scored) == ["q1", "q2"], f"questions not scored: {scored}")
     reveal = call("GET", f"/replay/sessions/{sid}/reveal")
-    expect(len(reveal["stocks"]) == 3 and reveal["stocks"][0]["real_code"], "reveal has no real stocks")
+    expect(
+        len(reveal["stocks"]) == 3 and reveal["stocks"][0]["real_code"],
+        "reveal has no real stocks",
+    )
     return f"settled, points_total={reveal['session']['settled']['points_total']}"
 
 
@@ -644,7 +682,7 @@ def main() -> int:
     print(f"e2e smoke against {BASE_URL}")
     try:
         call("GET", "/healthz")
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         print(f"FAIL server not reachable: {exc}")
         return 2
     state: dict[str, Any] = {}
@@ -660,7 +698,10 @@ def main() -> int:
     if _flag("REPLAY_SMOKE"):
         steps.append(s_replay)
     else:
-        print("SKIP  replay scenario (set REPLAY_SMOKE=1; server needs REPLAY_PACKS_DIR with the fixture pack)")
+        print(
+            "SKIP  replay scenario (set REPLAY_SMOKE=1; "
+            "server needs REPLAY_PACKS_DIR with the fixture pack)"
+        )
     for index, fn in enumerate(steps):
         if not fn(state):
             for rest in steps[index + 1 :]:

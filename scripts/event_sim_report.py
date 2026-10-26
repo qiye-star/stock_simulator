@@ -4,22 +4,28 @@
     v1（默认）：python3 scripts/event_sim_report.py --seeds 20 --days 300
     v2：        python3 scripts/event_sim_report.py --clock-rules 2 --seeds 20 --days 120
 
-    --clock-rules {1,2}：时钟规则版本，默认 1。v1 每交易日 20 tick，v2 每交易日 242 tick（domain.clock.timebase）。
-    --days 按交易日计；v2 单日 242 tick，耗时约为 v1 的 12 倍，可减少 --seeds / --days，报告会写明实际参数。
+    --clock-rules {1,2}：时钟规则版本，默认 1。v1 每交易日 20 tick，v2 每交易日 242
+    tick（domain.clock.timebase）。
+    --days 按交易日计；v2 单日 242 tick，耗时约为 v1 的 12 倍，可减少 --seeds / --days，
+    报告会写明实际参数。
 
-每个 seed 用真实 ``domain.advance`` 推进 days 个交易日（开启事件漂移），统计验收指标；两版都必须达标；
+每个 seed 用真实 ``domain.advance`` 推进 days 个交易日（开启事件漂移），统计验收指标；
+两版都必须达标；
 不达标时退出码 1。不达标只调 backend/src/stocksim/domain/events/constants.py 后重跑。
 
 指标口径（均只统计重大事件，排除 priced_in 与最终辟谣的传闻，其曲线按设计会反向或归零）：
-- 源行业一致率：industry 范围事件，发布前一 tick 到发布后 1 个交易日（v1 20 tick、v2 242 tick）的源行业等权收益，
+- 源行业一致率：industry 范围事件，发布前一 tick 到发布后 1 个交易日（v1 20 tick、v2 242
+  tick）的源行业等权收益，
   扣除全市场均值，符号与事件 sentiment 一致的比例。
-- 一跳一致率：传导 hop=1 的节点，从其延迟到达前一 tick 起 1 个交易日的超额收益，符号与预期一致的比例，
+- 一跳一致率：传导 hop=1 的节点，从其延迟到达前一 tick 起 1 个交易日的超额收益，
+  符号与预期一致的比例，
   按所经边的强度档位分别统计。
 - 触板率：industry 范围事件发布当日（事件日），源行业龙头 / 普通成分股当日是否触及涨停或跌停价。
   非事件日（无上述事件的交易日）按同口径另报对照（含随机噪声自带的触板）。
 - 日均漂移：每个交易日全市场等权平均的累计漂移（ppm）的平均值。
 - 熔断：逐 tick 检查 state["breaker"]。
-- 频率：每个重大事件周期的重大事件条数（周期：v1 12 个交易日，v2 1 个交易日）；按真实刷新速率折算平均间隔
+- 频率：每个重大事件周期的重大事件条数（周期：v1 12 个交易日，v2 1 个交易日）；
+  按真实刷新速率折算平均间隔
   （v1 默认 3 s/tick；v2 按 normal 档 5 s/游戏分钟）。
 - 计划构建耗时：单交易日 ``build_day_plan``（事件窗口已生成）p95；冷启动（连同窗口事件生成）另报告。
 """

@@ -96,6 +96,7 @@ AUTH_INVALID_CREDENTIALS, AUTH_USERNAME_TAKEN, AUTH_USERNAME_INVALID, AUTH_PASSW
 - `GET /challenges?limit=1-50（默认20）&cursor=` → `{items:[ChallengeOut], next_cursor}`，按日期降序；cursor 为 `YYYY-MM-DD`，非法 422 `VALIDATION_ERROR {field:"cursor"}`。
 - `GET /challenges/{id}` → ChallengeOut。
 - `POST /challenges/{id}/entry` → 新建 201 / 已报名 200（同一条），ChallengeEntryOut。`entry_closes_at` 前可报名，迟到者按当时行情开局。
+  - 不合格报名（账号注册时间晚于 `starts_at − CHALLENGE_MIN_ACCOUNT_AGE_HOURS`）**仍建存档并返回 201/200**，响应 `eligible=false`：可作答、可交易，但不进同伴分参考集、不上榜、不领奖（03 §8、§9）。客户端据 `eligible` 显示不合格提示。
 - `GET /challenges/{id}/rounds` → `{items:[ChallengeRoundCardOut]}`，只含已停顿（已打开）的回合。
 - `PUT /challenges/{id}/rounds/{round_index}/answer`，body `{answers}`（与 02 的 `PredictionAnswersIn` 同形，无 `resume`）→ ChallengeRoundCardOut。窗口内可改，上限 `CHALLENGE_MAX_REVISIONS`=20 次，以最后一次为准。`round_index` 1–10。
 - `GET /challenges/{id}/leaderboard?board=total|forecast|trade&limit=1-100（默认50）&cursor=` → LeaderboardOut（`scope="day"`），结算后可见。
