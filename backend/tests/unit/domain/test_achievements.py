@@ -212,3 +212,37 @@ def test_hidden_achievement_never_unlocks():
     everything = stats([tr(side="sell", pnl=1) for _ in range(300)], fund=INITIAL * 10)
     got = set(evaluate(everything, []))
     assert not got & {a.id for a in CATALOG if a.hidden}
+
+
+def test_v2_night_owl_window_is_last_five_minutes_before_close():
+    from stocksim.domain.achievements.stats import compute_stats
+
+    def late(minute, rules):
+        return compute_stats(
+            trades=[
+                {
+                    "side": "buy",
+                    "code": "600036",
+                    "quantity": 100,
+                    "price_cents": 1000,
+                    "amount_cents": 100_000,
+                    "fee_cents": 0,
+                    "prev_close_cents": 1000,
+                    "minute_of_day": minute,
+                    "pnl_cents": 0,
+                    "fund_before_cents": INITIAL,
+                    "trading_day": 0,
+                }
+            ],
+            holdings={},
+            prices={},
+            fund_cents=INITIAL,
+            initial_fund_cents=INITIAL,
+            clock_rules=rules,
+        ).late_trades
+
+    assert late(899, 2) == 1
+    assert late(895, 2) == 1
+    assert late(894, 2) == 0
+    assert late(700, 2) == 0
+    assert late(700, 1) == 1  # v1 夜猫窗口 695–700 保持不变

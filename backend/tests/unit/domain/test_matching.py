@@ -262,3 +262,77 @@ def test_insufficient_funds_uses_fee_inclusive_total():
     # 金额 10 万 + 手续费 30 分 > 余额 10 万
     e = err(run, buy(100), acct=Account(100_000))
     assert e.code == TRADE_INSUFFICIENT_FUNDS and e.params["required_cents"] == 100_030
+
+
+# ---- 时钟 v2 撮合窗（07 §4.2）：11:30 与 15:00 不接单，其余可下单分钟照常 ----
+V2 = TradeSettings(clock_rules=2)
+
+
+@pytest.mark.parametrize("minute", [690, 900, 569, 1000])
+def test_v2_rejects_orders_outside_window(minute):
+    with pytest.raises(DomainError) as exc:
+        run(buy(), settings=V2, minute=minute)
+    assert exc.value.code == MARKET_CLOSED
+
+
+@pytest.mark.parametrize("minute", [570, 689, 780, 899])
+def test_v2_accepts_orders_inside_window(minute):
+    r = run(buy(), settings=V2, minute=minute)
+    assert r.trade["quantity"] == 100
+
+
+def test_v1_still_accepts_1130_and_1500():
+    assert run(buy(), minute=690).trade["quantity"] == 100
+    assert run(buy(), minute=900).trade["quantity"] == 100
+
+
+def test_limit_pct_bp_twenty_percent_accepts_fifteen_percent_limit():
+    """创业板（20%）：+15% 的限价单通过，主板（10%）同一价格超限被拒（05 §8.2）。"""
+    prev = 10_000
+    price = 11_500
+    chinext = Quote(
+        code="300001",
+        name="x",
+        industry="y",
+        price_cents=10_000,
+        prev_close_cents=prev,
+        limit_pct_bp=2000,
+    )
+    # 偏离市价 15% 超过 10% 的确认线，需 confirm_deviation（上限 20% 内）
+    req = OrderRequest(
+        code="300001",
+        side="buy",
+        quantity=100,
+        price_type="limit",
+        limit_price_cents=price,
+        confirm_deviation=True,
+    )
+    result = execute_order(
+        req,
+        account=Account(fund_cents=10**9),
+        quote=chinext,
+        settings=SET,
+        trades=[],
+        trading_day=DAY,
+        minute_of_day=TEN,
+    )
+    assert result.fill_price_cents == 10_000
+    main = Quote(code="300001", name="x", industry="y", price_cents=10_000, prev_close_cents=prev)
+    with pytest.raises(DomainError) as exc:
+        execute_order(
+            req,
+            account=Account(fund_cents=10**9),
+            quote=main,
+            settings=SET,
+            trades=[],
+            trading_day=DAY,
+            minute_of_day=TEN,
+        )
+    assert exc.value.code == TRADE_PRICE_OUT_OF_LIMIT
+
+
+def test_quote_default_limit_is_ten_percent():
+    assert (
+        Quote(code="600001", name="x", industry="y", price_cents=1, prev_close_cents=1).limit_pct_bp
+        == 1000
+    )

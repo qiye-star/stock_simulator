@@ -23,10 +23,17 @@ from collections.abc import Mapping, Sequence
 from datetime import date, timedelta
 from typing import Any
 
-from .clock import TICKS_PER_TRADING_DAY, is_trading_time
+from .clock import (
+    CLOCK_RULES_V1,
+    CLOCK_RULES_V2,
+    TICKS_PER_TRADING_DAY,
+    V2_TRADING_TICKS_PER_DAY,
+    is_trading_time,
+    timebase,
+)
 from .money import PPM_DENOMINATOR, round_half_up_div, scale_ppm
 from .rng import rand_below
-from .rules import breaker_move_exceeded, clamp_to_limits, tick_circuit_breakers
+from .rules import LIMIT_PCT_BP, breaker_move_exceeded, clamp_to_limits, tick_circuit_breakers
 from .types import Quote
 
 INIT_TICK = -1
@@ -50,6 +57,23 @@ ORDER_BOOK_VOLUME_SPAN = 10_000
 ORDER_BOOK_VOLUME_MIN = 100
 DEFAULT_PRICE_RANGE_YUAN = (5, 100)  # legacy generateBasePrice default
 BULL_BIAS_PROFILE = "bull_bias"
+
+# ---- v2（clock_rules=2，见 docs/10.26-plan/07-时钟v2.md §4）常量：整数 ppm，发布后冻结 ----
+V2_IDIO_SPAN_PPM = 3_200  # 个股特质噪声 rand_below(3200) - 1600，σ≈924 ppm
+V2_IDIO_OFFSET_PPM = 1_600
+V2_MKT_SPAN_PPM = 1_680  # 全市场共同因子 rand_below(1680) - 840，所有股票共用
+V2_MKT_OFFSET_PPM = 840
+V2_MARKET_FACTOR_IDX = 400  # RNG 维度：共同因子占用的 stock_idx（个股为 0..384）
+# 波动档位 (概率%, 波动倍数 ppm)
+V2_VOL_TABLE = ((35, 750_000), (45, 1_000_000), (15, 1_500_000), (5, 2_500_000))
+# 趋势日概率（%）。标定见 scripts/clock_v2_sim_report.py：
+# 计划初值 4% / [200,450] 时触涨停与触跌停比值 1.57（超出 0.7–1.4）。
+V2_TREND_PCT = 1
+V2_TREND_PPM = (400, 700)  # 趋势日每 tick 漂移幅度 U[400, 700] ppm，方向随机
+V2_BULL_DRIFT_PPM = 120  # bull_bias 每 tick 额外漂移（日均约 +2.9%）
+V2_REGIME_TICK_BASE = -(1 << 33)  # 日档位 RNG 的 tick 命名空间：V2_REGIME_TICK_BASE - day
+V2_VOLUME_RANDOM_BASE_PPM = 700_000  # 成交量随机因子 700k + rand_below(600k)，均值约 1.0
+V2_VOLUME_RANDOM_SPAN_PPM = 600_000
 BULL_BIAS_CODE = "999999"
 
 # 行业价格区间来自 data/industries.json（由调用方传入 industry_ranges）
@@ -209,11 +233,48 @@ def _clone(state: Mapping[str, Any]) -> dict[str, Any]:
     }
 
 
-def advance(state: Mapping[str, Any], seed: int, tick: int, minute_of_day: int) -> dict[str, Any]:
+def _clone_v2(state: Mapping[str, Any]) -> dict[str, Any]:
+    """v2 用的结构化复制：只浅拷贝 history 列表。
+
+    v2 只替换末根 K 线（先复制再改），历史 K 线对象与入参共享且不被修改。
+    """
+    stocks = []
+    for stock in state["stocks"]:
+        copied = dict(stock)
+        copied["history"] = list(stock["history"])
+        stocks.append(copied)
+    return {
+        "trading_tick": state["trading_tick"],
+        "trading_day": state["trading_day"],
+        "breaker": dict(state["breaker"]),
+        "stocks": stocks,
+    }
+
+
+def advance(
+    state: Mapping[str, Any],
+    seed: int,
+    tick: int,
+    minute_of_day: int,
+    *,
+    drift: Mapping[int, int] | None = None,
+    rules: int = CLOCK_RULES_V1,
+) -> dict[str, Any]:
     """推进一个全局 tick。非交易时段原样返回副本（legacy 2028-2031 不更新行情）。
 
     tick 为全局单调递增的 tick 编号（RNG 维度）。返回新 dict，不修改入参。
+
+    drift: {stock_idx: ppm}，本 tick 叠加到随机涨跌幅上的外部漂移（事件行情用，由调用方算好）。
+    None / 空映射时执行的整数运算与没有该参数时完全一致（金值测试守护）。漂移只改变“尝试价”，
+    熔断判断与涨跌停钳制照旧，被钳掉的部分直接丢弃。
+
+    rules: 时钟规则版本。1（默认）为 v1 引擎（本函数体逐字保留，金值测试守护）；
+    2 为 v2 引擎（_advance_v2）。
     """
+    if rules == CLOCK_RULES_V2:
+        return _advance_v2(state, seed, tick, minute_of_day, drift)
+    if rules != CLOCK_RULES_V1:
+        raise ValueError(f"unknown clock_rules: {rules}")
     new = _clone(state)
     if not is_trading_time(minute_of_day):
         return new
@@ -231,7 +292,10 @@ def advance(state: Mapping[str, Any], seed: int, tick: int, minute_of_day: int) 
             _rollover(stock)
         pre = int(stock["price"])
         prev_close = int(stock["prev_close"])
-        attempted = max(1, scale_ppm(pre, PPM_DENOMINATOR + _move_ppm(seed, tick, stock)))
+        move = _move_ppm(seed, tick, stock)
+        if drift:
+            move += drift.get(int(stock["stock_idx"]), 0)
+        attempted = max(1, scale_ppm(pre, PPM_DENOMINATOR + move))
         if breaker_move_exceeded(attempted, pre):
             triggered.append(stock["code"])
         price = clamp_to_limits(attempted, prev_close)
@@ -254,6 +318,128 @@ def advance(state: Mapping[str, Any], seed: int, tick: int, minute_of_day: int) 
         candle["volume"] = daily_volume
 
     # 熔断：先置位再统一递减（legacy triggerCircuitBreaker → updateCircuitBreakerCooldown）
+    new["breaker"] = tick_circuit_breakers(new["breaker"], triggered)
+    return new
+
+
+def _day_regime(seed: int, day: int, idx: int) -> tuple[int, int]:
+    """v2 日档位：(波动倍数 ppm, 趋势日每 tick 漂移 ppm)。(seed, day, idx) 的纯函数。"""
+    tick = V2_REGIME_TICK_BASE - day
+    pick = rand_below(seed, tick, idx, 0, 100)
+    vol_ppm = V2_VOL_TABLE[-1][1]
+    acc = 0
+    for weight, ppm in V2_VOL_TABLE:
+        acc += weight
+        if pick < acc:
+            vol_ppm = ppm
+            break
+    trend_ppm = 0
+    if rand_below(seed, tick, idx, 1, 100) < V2_TREND_PCT:
+        lo, hi = V2_TREND_PPM
+        mag = lo + rand_below(seed, tick, idx, 2, hi - lo + 1)
+        trend_ppm = mag if rand_below(seed, tick, idx, 3, 2) == 1 else -mag
+    return vol_ppm, trend_ppm
+
+
+def _regime_of(state: dict[str, Any], seed: int, day: int, idx: int) -> tuple[int, int]:
+    """取当日档位，缓存在 state["regime"]（不入 payload）；日切换时整体重建。
+
+    就地修改 state，调用方须已复制。
+    """
+    cache = state.get("regime")
+    if cache is None or cache["day"] != day:
+        cache = {"day": day, "vol": {}, "trend": {}}
+        state["regime"] = cache
+    if idx not in cache["vol"]:
+        vol_ppm, trend_ppm = _day_regime(seed, day, idx)
+        cache["vol"][idx] = vol_ppm
+        cache["trend"][idx] = trend_ppm
+    return cache["vol"][idx], cache["trend"][idx]
+
+
+def _increment_v2(prev_daily_volume: int, daily_change_ppm: int, random_ppm: int) -> int:
+    """v2 成交量增量：整日量按前一日量 × (1 + 1.5·涨跌幅) × 随机因子 分摊到 242 个 tick。"""
+    clamped = max(-VOLUME_CHANGE_CLAMP_PPM, min(VOLUME_CHANGE_CLAMP_PPM, daily_change_ppm))
+    factor = PPM_DENOMINATOR + (clamped * 3) // 2
+    inc = (
+        prev_daily_volume
+        * factor
+        * random_ppm
+        // (PPM_DENOMINATOR * PPM_DENOMINATOR * V2_TRADING_TICKS_PER_DAY)
+    )
+    return max(1, inc)
+
+
+def _advance_v2(
+    state: Mapping[str, Any],
+    seed: int,
+    tick: int,
+    minute_of_day: int,
+    drift: Mapping[int, int] | None,
+) -> dict[str, Any]:
+    """v2 单 tick：242 个交易 tick / 日，换日在次日 9:30（rolls_at）。07 §4.1–4.6。"""
+    new = _clone_v2(state)
+    if "regime" in state:
+        cache = state["regime"]
+        new["regime"] = {
+            "day": cache["day"],
+            "vol": dict(cache["vol"]),
+            "trend": dict(cache["trend"]),
+        }
+    if not is_trading_time(minute_of_day):
+        return new
+
+    tb = timebase(CLOCK_RULES_V2)
+    trading_tick = int(new["trading_tick"]) + 1
+    new["trading_tick"] = trading_tick
+    rollover = tb.rolls_at(trading_tick)
+    day = tb.day_of(trading_tick)
+    new["trading_day"] = day
+    if rollover:
+        new["breaker"] = {}
+    market_factor = (
+        rand_below(seed, tick, V2_MARKET_FACTOR_IDX, 0, V2_MKT_SPAN_PPM) - V2_MKT_OFFSET_PPM
+    )
+
+    triggered: list[str] = []
+    for stock in new["stocks"]:
+        if rollover:
+            _rollover(stock)
+        idx = int(stock["stock_idx"])
+        pre = int(stock["price"])
+        prev_close = int(stock["prev_close"])
+        vol_ppm, trend_ppm = _regime_of(new, seed, day, idx)
+        idio = rand_below(seed, tick, idx, 0, V2_IDIO_SPAN_PPM) - V2_IDIO_OFFSET_PPM
+        move = round_half_up_div(idio * vol_ppm, PPM_DENOMINATOR) + market_factor + trend_ppm
+        if stock.get("profile") == BULL_BIAS_PROFILE:
+            move += V2_BULL_DRIFT_PPM
+        if drift:
+            move += drift.get(idx, 0)
+        attempted = max(1, scale_ppm(pre, PPM_DENOMINATOR + move))
+        if breaker_move_exceeded(attempted, pre):
+            triggered.append(stock["code"])
+        price = clamp_to_limits(attempted, prev_close)
+        stock["price"] = price
+        stock["high"] = max(int(stock["high"]), price)
+        stock["low"] = min(int(stock["low"]), price)
+
+        daily_change = _change_ppm(prev_close, price)
+        random_ppm = V2_VOLUME_RANDOM_BASE_PPM + rand_below(
+            seed, tick, idx, 2, V2_VOLUME_RANDOM_SPAN_PPM
+        )
+        daily_volume = int(stock["daily_volume"]) + _increment_v2(
+            int(stock["prev_daily_volume"]), daily_change, random_ppm
+        )
+        stock["daily_volume"] = daily_volume
+        stock["volume"] = daily_volume
+
+        candle = dict(stock["history"][-1])  # 末根 K 线可能与入参共享，先复制再改
+        candle["close"] = price
+        candle["high"] = max(int(candle["high"]), price)
+        candle["low"] = min(int(candle["low"]), price)
+        candle["volume"] = daily_volume
+        stock["history"][-1] = candle
+
     new["breaker"] = tick_circuit_breakers(new["breaker"], triggered)
     return new
 
@@ -301,6 +487,7 @@ def to_quote(state: Mapping[str, Any], code: str) -> Quote | None:
         price_cents=int(stock["price"]),
         prev_close_cents=int(stock["prev_close"]),
         circuit_breaker_active=int(state["breaker"].get(code, 0)) > 0,
+        limit_pct_bp=int(stock.get("limit_pct_bp", LIMIT_PCT_BP)),
     )
 
 

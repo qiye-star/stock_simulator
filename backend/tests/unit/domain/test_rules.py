@@ -82,3 +82,14 @@ def test_t1_buy_block_after_same_day_sell():
     assert not r.t1_buy_blocked(TRADES, "A", 4, t0_mode=False)
     assert not r.t1_buy_blocked(TRADES, "A", 3, t0_mode=True)
     assert not r.t1_buy_blocked(TRADES, "B", 3, t0_mode=False)
+
+
+def test_limits_default_to_ten_percent_and_accept_board_pct():
+    from stocksim.domain.rules import clamp_to_limits, limit_down_cents, limit_up_cents
+
+    assert limit_up_cents(10_000) == 11_000
+    assert limit_down_cents(10_000) == 9_000
+    assert limit_up_cents(10_000, 2000) == 12_000
+    assert limit_down_cents(10_000, 2000) == 8_000
+    assert clamp_to_limits(12_500, 10_000, 2000) == 12_000
+    assert clamp_to_limits(12_500, 10_000) == 11_000
