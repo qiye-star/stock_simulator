@@ -7,7 +7,9 @@ from fastapi import APIRouter, Query
 
 from stocksim.api.deps import CurrentUser, DbSession
 from stocksim.core.errors import AppError, ErrorCode
+from stocksim.schemas.events import EventMarksOut
 from stocksim.schemas.market import IntradayOut, MarketOut, StockMarketOut
+from stocksim.services import events as events_service
 from stocksim.services import market as market_service
 from stocksim.services.saves import open_save
 
@@ -57,3 +59,16 @@ def get_intraday(save_id: uuid.UUID, code: str, user: CurrentUser, db: DbSession
     if data is None:
         raise AppError(ErrorCode.STOCK_NOT_FOUND, {"code": code})
     return data
+
+
+@router.get("/{code}/event-marks", response_model=EventMarksOut)
+def get_event_marks(
+    save_id: uuid.UUID,
+    code: str,
+    user: CurrentUser,
+    db: DbSession,
+    days: Annotated[int, Query(ge=1, le=120)] = 60,
+) -> dict:
+    """个股相关的事件标记（source / propagated / market），用于 K 线标注（01 §8.1）。"""
+    save = open_save(db, user, save_id)
+    return events_service.event_marks(db, save, code, days, user.lang)

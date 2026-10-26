@@ -39,6 +39,37 @@ COPY . /app
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv pip install --python /app/.venv/bin/python --no-deps -e .
 
+# ---------- ingest（复盘数据抓存，compose 服务 replay-collector，profile: collector） ----------
+# 基于 builder，额外安装 ingest 依赖组（akshare）。它不是运行时镜像的来源：runtime 仍是最后一个 stage，
+# 因此默认 `docker compose build` 得到的 backend 镜像内容与大小不变（ingest 层只在指定 target 时构建）。
+FROM builder AS ingest
+
+WORKDIR /app
+
+RUN --mount=type=cache,target=/root/.cache/uv \
+    --mount=type=bind,source=pyproject.toml,target=/app/pyproject.toml \
+    --mount=type=bind,source=uv.lock,target=/app/uv.lock \
+    uv export --frozen --no-emit-project --only-group ingest --format requirements-txt -o /tmp/ingest-requirements.txt \
+ && uv pip install --python /app/.venv/bin/python --require-hashes -r /tmp/ingest-requirements.txt \
+ && rm -f /tmp/ingest-requirements.txt
+
+RUN groupadd --system --gid 10001 app \
+ && useradd --system --uid 10001 --gid app --home-dir /app --no-create-home --shell /usr/sbin/nologin app \
+ && mkdir -p /replay \
+ && chown 10001:10001 /replay
+
+ENV PATH="/app/.venv/bin:$PATH" \
+    PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    REPLAY_DATA_DIR=/replay
+
+VOLUME ["/replay"]
+
+USER 10001:10001
+
+# 默认常驻抓存；compose 与 docs/deployment.md 中也显式给出同样的命令
+CMD ["python", "-m", "stocksim.replay_ingest", "collect", "--loop", "--interval", "120"]
+
 # ---------- runtime ----------
 FROM ${PYTHON_IMAGE} AS runtime
 

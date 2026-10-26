@@ -16,7 +16,7 @@ from sqlalchemy import func, select
 
 from stocksim.db.base import utcnow
 from stocksim.models import Candle, EquitySnapshot, MarketState, Save
-from stocksim.services.market import advance_to_now
+from stocksim.services.market import advance_ticks, advance_to_now
 
 SAVES = "/api/v1/saves"
 RATE_MS = 60_000
@@ -182,3 +182,42 @@ def test_stale_session_hits_unique_conflict_and_recovers(
         assert advance_to_now(db_b, save_b) == 0
 
     _assert_equivalent(_final_state(app, sid), expected)
+
+
+# ---- 时钟 v2：并发补推跨交易日（07 §9.2）----
+# v2 的补推上限按交易 tick 计（TICK_CATCHUP_MAX=300，约 1.24 个交易日）；回拨量远超上限时，
+# 两次请求应得到相同的截断结果，且收盘数据每日恰好一行。
+
+
+def _stale_save_v2(client: TestClient, app: FastAPI, seed: int) -> str:
+    client.patch("/api/v1/me", json={"clock_speed": "fast"})  # 2500 ms / 游戏分钟
+    sid = client.post(SAVES, json={"clock_rules": 2}).json()["id"]
+    with app.state.session_factory() as db:
+        save = db.get(Save, uuid.UUID(sid))
+        save.market_seed = seed
+        save.last_tick_at = utcnow() - timedelta(milliseconds=2500 * 900)
+        db.commit()
+    return sid
+
+
+def test_concurrent_requests_across_trading_days_v2(
+    registered_client: TestClient, app: FastAPI
+) -> None:
+    for round_ in range(2):
+        sid = _stale_save_v2(registered_client, app, seed=2000 + round_)
+        twin = _clone_save(app, sid)  # 未推进的基准
+
+        results = _hammer(registered_client, sid)
+
+        assert results == dict.fromkeys(READ_PATHS, 200), results
+        actual = _final_state(app, sid)
+        # 截断后锚点为 now，之后的请求会按真实流逝的墙钟继续补推，因此基准按实际 tick 数一次推进
+        with app.state.session_factory() as db:
+            advance_ticks(db, db.get(Save, uuid.UUID(twin)), actual["tick"])
+        expected = _final_state(app, twin)
+        assert actual["trading_day"] >= 1  # 确认跨过了第 0 日收盘
+        assert actual["dup_candles"] == []
+        days = [d for d, *_ in actual["snaps"]]
+        assert days == list(range(actual["trading_day"]))
+        for key in ("tick", "clock_minute", "trading_day", "payload", "candles", "snaps"):
+            assert actual[key] == expected[key], key

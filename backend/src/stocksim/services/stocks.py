@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Callable
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
@@ -13,7 +14,8 @@ from pathlib import Path
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from stocksim.models import Stock
+from stocksim.models import Save, Stock
+from stocksim.models.save import SAVE_MODE_REPLAY
 
 DATA_DIR = Path(__file__).resolve().parents[1] / "data"
 
@@ -49,6 +51,20 @@ def _pool_by_code() -> dict[str, StockInfo]:
 
 def get_stock_info(code: str) -> StockInfo | None:
     return _pool_by_code().get(code)
+
+
+def stock_info_for(db: Session, save: Save, code: str) -> StockInfo | None:
+    """存档视角的股票信息：复盘存档按关卡（别名或真名），其余等同 get_stock_info（05 §5.3）。"""
+    if save.mode == SAVE_MODE_REPLAY:
+        from stocksim.services.replay import state as replay_state
+
+        return replay_state.stock_info(db, save, code)
+    return get_stock_info(code)
+
+
+def info_lookup(db: Session, save: Save) -> Callable[[str], StockInfo | None]:
+    """与 stock_info_for 同口径的查找函数（一次请求内复用会话上下文）。"""
+    return lambda code: stock_info_for(db, save, code)
 
 
 @lru_cache(maxsize=1)

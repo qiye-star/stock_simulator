@@ -9,7 +9,8 @@
 - `schemas/` 请求响应模型，只做形状校验；业务校验放 `services/`。
 - `services/` 业务编排，抛 `AppError`。
 - `api/` 依赖与路由，只做 HTTP 适配。
-- `domain/`、`data/` 归 domain agent：纯函数、零 I/O，禁止 import sqlalchemy/fastapi，不要在此修改。
+- `domain/`、`data/`：纯函数、零 I/O，禁止 import sqlalchemy/fastapi；由实施对应玩法的 agent 修改，遵守其 CLAUDE.md。
+- `replay_ingest/`：真实复盘离线数据管道，运行时代码不得 import 它；akshare 只在其 `client.py` 中导入。
 
 ## 不变量
 - 金额整数分；时间 UTC；`/api/v1` 前缀；错误体 `{"code","params"}`。

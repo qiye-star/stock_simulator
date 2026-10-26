@@ -9,6 +9,7 @@ from stocksim.api.deps import CurrentUser, DbSession
 from stocksim.schemas.orders import OrderIn, OrderOut, TradeOut, TradePageOut
 from stocksim.services import trading as trading_service
 from stocksim.services.saves import open_save
+from stocksim.services.stocks import info_lookup
 
 router = APIRouter(tags=["orders"])
 
@@ -40,7 +41,9 @@ def place_order(
     if placed.replayed:
         response.status_code = status.HTTP_200_OK
     return OrderOut(
-        trade=TradeOut.model_validate(trading_service.trade_to_dict(placed.trade)),
+        trade=TradeOut.model_validate(
+            trading_service.trade_to_dict(placed.trade, info_lookup(db, save))
+        ),
         unlocked_achievement_ids=list(placed.unlocked_achievement_ids),
         cash_cents=placed.cash_cents,
         replayed=placed.replayed,
@@ -57,6 +60,9 @@ def list_trades(
     save = open_save(db, user, save_id)
     rows, next_cursor = trading_service.list_trades(db, save, cursor)
     return TradePageOut(
-        items=[TradeOut.model_validate(trading_service.trade_to_dict(t)) for t in rows],
+        items=[
+            TradeOut.model_validate(trading_service.trade_to_dict(t, info_lookup(db, save)))
+            for t in rows
+        ],
         next_cursor=next_cursor,
     )

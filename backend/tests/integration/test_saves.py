@@ -115,7 +115,7 @@ def test_export_contains_versioned_snapshot(registered_client: TestClient) -> No
     assert resp.status_code == 200
     assert "attachment" in resp.headers["content-disposition"]
     body = resp.json()
-    assert body["format"] == "stocksim-save" and body["format_version"] == 1
+    assert body["format"] == "stocksim-save" and body["format_version"] == 2
     assert body["save"]["id"] == save["id"]
     assert body["save"]["market_seed"].isdigit()
     assert body["trades"] == [] and body["holdings"] == []
@@ -167,3 +167,30 @@ def test_fee_rates_round_trip_as_decimal_strings(registered_client: TestClient) 
     save = _create(registered_client, buy_fee_rate="0.00035", sell_fee_rate=0.001)
     assert Decimal(save["buy_fee_rate"]) == Decimal("0.00035")
     assert Decimal(save["sell_fee_rate"]) == Decimal("0.001")
+
+
+def test_events_flag_defaults_off_and_is_set_on_create(registered_client: TestClient) -> None:
+    client = registered_client
+    assert _create(client)["events_enabled"] is False
+    resp = client.post(SAVES, json={"name": "事件", "events_enabled": True, "clock_rules": 2})
+    assert resp.status_code == 201
+    body = resp.json()
+    assert body["events_enabled"] is True
+    assert client.get(f"{SAVES}/{body['id']}").json()["events_enabled"] is True
+
+
+def test_export_of_event_save_hides_seed_and_bumps_format(registered_client: TestClient) -> None:
+    client = registered_client
+    created = client.post(SAVES, json={"name": "事件", "events_enabled": True, "clock_rules": 2})
+    sid = created.json()["id"]
+    body = client.get(f"{SAVES}/{sid}/export").json()
+    assert body["format_version"] == 2
+    assert body["save"]["events_enabled"] is True
+    assert body["save"]["events_ruleset"] == 1
+    assert body["save"]["market_seed"] is None
+    assert body["save"]["clock_rules"] == "v2"
+    closed = _create(client)
+    closed_body = client.get(f"{SAVES}/{closed['id']}/export").json()
+    assert closed_body["save"]["events_enabled"] is False
+    assert closed_body["save"]["events_ruleset"] == 0
+    assert closed_body["save"]["market_seed"].isdigit()

@@ -41,7 +41,7 @@ USERNAME_MAX_LEN = 20
 PASSWORD_MIN_LEN = 6
 PASSWORD_MAX_LEN = 20
 
-PREFERENCE_FIELDS = ("theme", "lang", "refresh_rate_ms", "tutorial_completed")
+PREFERENCE_FIELDS = ("theme", "lang", "refresh_rate_ms", "tutorial_completed", "clock_speed")
 
 
 def validate_username(username: str) -> None:

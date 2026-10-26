@@ -29,6 +29,8 @@ def create_save(body: SaveCreateIn, user: CurrentUser, db: DbSession) -> object:
         sell_fee_rate=body.sell_fee_rate,
         t0_mode=body.t0_mode,
         trade_unit=body.trade_unit,
+        clock_rules=body.clock_rules,
+        events_enabled=body.events_enabled,
     )
 
 

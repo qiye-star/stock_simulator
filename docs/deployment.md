@@ -18,7 +18,8 @@ docker compose up -d --build
 
 1. `migrate` 执行 `alembic upgrade head`，成功后退出（`service_completed_successfully`）；
 2. `backend` 启动并通过 healthcheck `GET /api/v1/healthz`；
-3. `frontend`（网页版）与 `mobile`（手机版）启动。两者共用同一个 `backend` 与数据库。
+3. `frontend`（网页版）与 `mobile`（手机版）启动。两者共用同一个 `backend` 与数据库；
+4. `challenge-runner`（每日挑战定时任务，见 §6a）与 `backend` 同时启动、共用同一数据库。
 
 查看状态与日志：
 
@@ -48,9 +49,10 @@ docker compose logs -f backend
 
 | 卷 | 挂载位置 | 内容 |
 | --- | --- | --- |
-| `backend-data` | `/data`（backend、migrate） | sqlite 文件 `stocksim.db` |
+| `backend-data` | `/data`（backend、migrate、challenge-runner） | sqlite 文件 `stocksim.db` |
 | `postgres-data` | postgres 数据目录 | postgres 数据 |
 | `mysql-data` | mysql 数据目录 | mysql 数据 |
+| `replay-data` | `/replay`（replay-collector） | 真实复盘原始数据（见 §6b），只供离线构建，不进运行时 |
 
 sqlite 备份（服务不停机时使用 sqlite 在线备份命令，避免直接复制正在写入的文件）：
 
@@ -88,6 +90,69 @@ docker compose up -d --build
 - `.env` 必须设置 `COOKIE_SECURE=true` 与随机 `SECRET_KEY`（compose 已透传）。Cookie 为 httpOnly + SameSite=Lax，不设 Domain：两个域名各自登录、互不影响，账号与存档共享。
 - 后端没有 CORS / Host / Origin 校验，两站均为同源 `/api`，无需额外配置。
 - 手机版资产曲线的存放位置以 `mobile-prototype/CLAUDE.md` 当前说明为准。
+
+## 6a. 每日挑战定时任务（challenge-runner）
+
+- `challenge-runner` 与 backend 同镜像、同环境变量（compose 用 YAML 锚点共用），执行 `stocksim-challenge loop --interval 15`。无人在线时它也会按时生成当日与明日（本地 12:00 起）挑战、开局、推进行情、结算、发奖与清理。**推荐生产开启**。
+- 没有 runner 时挑战只会在有人访问挑战接口时懒触发（节流 `CHALLENGE_RUN_DUE_MIN_INTERVAL_S` 秒），没人在线的时段不会结算与发奖。
+- 多实例与 runner 并存是安全的：生成靠 `challenge_date` 唯一键，状态迁移与结算靠条件更新与乐观锁，奖励靠积分账本的幂等键。
+- **`CHALLENGE_SEED_KEY` 生产必须设置**。为空时由 `SECRET_KEY` 派生；若 `SECRET_KEY` 仍是开发默认值，后端启动会告警“挑战 seed 可预测”。
+- `CHALLENGE_SCHEDULE=compact` 只用于开发与 e2e，且**要求 `ENABLE_DEBUG_API=true`**，否则后端启动失败。生产保持 `daily`。
+- 常用命令（在 runner 容器内执行）：
+
+```bash
+docker compose exec challenge-runner stocksim-challenge run-due
+docker compose exec challenge-runner stocksim-challenge show --date 2026-10-26   # 结算前只显示承诺，结算后显示 seed
+docker compose exec challenge-runner stocksim-challenge void --date 2026-10-26 --reason "运维作废"
+```
+
+- 本地不用 Docker：`cd backend && uv run stocksim-challenge run-due`（读取 `backend/.env`）。
+- 配置项与默认值见根目录 `.env.example`（`CHALLENGE_*`）与 `backend/src/stocksim/core/config.py`。
+
+## 6a'. 预测市场多实例与后台任务
+
+- 预测市场的后台 Hub 与 sweeper 默认在每个 backend 实例上启动（`PM_BACKGROUND_ENABLED=true`，`PM_POLL_MS=1000`，`PM_SWEEP_MS=10000`）。多个实例共用同一数据库即可，**不需要粘性会话，也不需要 Redis**；各实例的 sweeper 靠行锁、版本号与幂等键保证结算只生效一次（集成测试 `test_concurrent_sync_due_settles_once` 以三个线程并发执行 `sync_due` 验证结算只生效一次）。
+- 每个实例每秒一次的小查询数为 `被关注挑战数`；配合索引可以忽略。规模变大时可把 `PM_POLL_MS` 调大，代价是推送延迟上限随之变大。
+- **推荐 PostgreSQL**：多实例或多 worker 时 SQLite 的写锁会让下单频繁返回 `PM_BUSY`（重试 5 次后）。切换方式见本文 §3。
+- 只需要 API、不需要实时推送的副本可设 `PM_BACKGROUND_ENABLED=false`；至少要有一个实例保持开启，否则结算只能靠用户访问时的惰性同步。
+
+## 6b. 复盘数据抓存（replay-collector）
+
+真实复盘（模式 E）的关卡要用到**只保留最近数据**的接口：财联社电报（最新 20 条）和东财个股新闻（每只股票最新 10 条）。`replay-collector` 从现在起定时抓存它们，供以后的复盘关卡离线构建。设计依据见 `docs/10.26-plan/05-真实复盘.md` §2.5。
+
+- **默认不启动**（profile `collector`）。`docker compose up -d --build` 不会包含它。
+- 启动与停止：
+
+```bash
+docker compose --profile collector up -d --build replay-collector
+docker compose --profile collector logs -f replay-collector
+docker compose --profile collector stop replay-collector
+```
+
+- 镜像 `stocksim-ingest:local` 由后端 Dockerfile 的 `ingest` stage 构建：基于 builder，额外安装 `ingest` 依赖组（akshare）。运行时镜像（`runtime`，默认构建目标）不含 akshare，内容与大小不变。
+- 抓取计划（单进程 `collect --loop`，不需要 cron）：
+
+| 任务 | 频率 | 去重 | 落盘 |
+| --- | --- | --- | --- |
+| 财联社电报 `全部` 与 `重点` | 每 120 秒各一次 | `sha1(发布日期+发布时间+标题+内容前 50 字)` | `cls/<yyyy-mm>/<发布日期>.jsonl` |
+| 东财个股新闻 | 每 10 秒轮转一只（约 384 只，一轮约 64 分钟） | `sha1(新闻链接)` | `em_news/<代码>/<yyyy-mm>.jsonl` |
+| 每日补抓 | 北京时间 20:30，当日一次（重启后当日未完成会补跑，完成后不重跑） | 覆盖当日文件 | 新闻联播 `cctv/`、公司动态 `gsrl/`、股票池当季公告 `cninfo/` |
+
+- 相邻两次电报 `全部` 没有任何重叠时，写入 `_state/collect_log.jsonl`（`event: gap_suspected`），表示可能漏抓（高峰期 20 条可能不足以覆盖 120 秒）。
+- 环境变量（写在 `.env` 中）：
+  - `REPLAY_COLLECT_UNIVERSE`：默认 `pool`（股票池真实代码，排除彩蛋 999999）；也可写逗号分隔的 6 位代码，用于缩小范围。
+  - `HTTP_PROXY` / `HTTPS_PROXY`：东财与财联社经 `requests` 访问，需要代理时设置，留空即直连。
+  - `REPLAY_RATE_<HOST>_MS`：限速间隔覆盖（默认 eastmoney 1500ms、cninfo 3000ms、cctv 30000ms；财联社不限速，间隔 120 秒本身已足够慢）。
+- 原始数据在卷 `replay-data`（容器内 `/replay`）。查看：
+
+```bash
+docker compose --profile collector exec replay-collector sh -c 'ls /replay/cls /replay/em_news'
+docker compose --profile collector exec replay-collector tail -n 1 /replay/_state/collect_cursor.json
+```
+
+- 不想常驻容器时，也可以用宿主机 crontab 单次运行（与常驻二选一，不要同时开）：`docker compose --profile collector run --rm replay-collector python -m stocksim.replay_ingest collect --once`（建议每 2 分钟一次）和 `... daily`（每天 20:30）。`--once` 每次只轮转一只个股新闻，个股覆盖会明显变慢，因此推荐常驻。
+- 体量与运维：原始数据约每年不到 1GB（电报约 0.75MB/天、个股新闻约 2MB/天，按月 gzip 后约 200MB/年）。**调用日志 `_state/fetch_log.jsonl` 每次请求一行（约 120 字节），常驻运行约每天 1.4MB，需要定期归档或轮转**。
+- 版权：电报与东财新闻的正文属版权内容。原始数据只在卷里，不进 git，也不对外分发；关卡包只保留标题与不超过 300 字的摘要加来源链接（05 §10）。
 
 ## 国内构建加速
 

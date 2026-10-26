@@ -16,6 +16,7 @@ class User(Base):
         CheckConstraint("theme IN ('dark','light','festival')", name="theme_valid"),
         CheckConstraint("lang IN ('zh-CN','en-US')", name="lang_valid"),
         CheckConstraint("refresh_rate_ms > 0", name="refresh_positive"),
+        CheckConstraint("clock_speed IN ('fast','normal','slow')", name="clock_speed_valid"),
     )
 
     id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True, default=uuid.uuid4)
@@ -25,6 +26,8 @@ class User(Base):
     lang: Mapped[str] = mapped_column(String(8), default="zh-CN", server_default="zh-CN")
     refresh_rate_ms: Mapped[int] = mapped_column(Integer, default=3000, server_default="3000")
     tutorial_completed: Mapped[bool] = mapped_column(Boolean, default=False, server_default="0")
+    # v2 存档的节奏档（每游戏分钟毫秒数由 domain.clock.SPEED_MS_PER_MINUTE 决定）；v1 存档不用
+    clock_speed: Mapped[str] = mapped_column(String(8), default="normal", server_default="normal")
     created_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(UTCDateTime(), default=utcnow, onupdate=utcnow)
 
