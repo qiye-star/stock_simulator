@@ -28,6 +28,9 @@ LEGACY_RANGES_YUAN = {
     "保险": [20, 80],
 }
 BULL_BIAS_CODE = "999999"  # 影视飓风彩蛋（legacy/game.js 2087-2088）
+# 名称覆盖：legacy 中 000938 误为“中芯国际”，实为紫光股份（决策 19，2026-10-26）。
+# 只改名称，行情不依赖 name（已证明逐 tick 不变）；legacy 只读，不改源。
+NAME_OVERRIDES = {"000938": "紫光股份"}
 
 ENTRY_RE = re.compile(r"\{\s*code:\s*'([^']+)',\s*name:\s*'([^']+)',\s*industry:\s*'([^']+)'\s*\}")
 
@@ -45,6 +48,7 @@ def main() -> None:
     stocks = []
     for code, name, industry in entries:
         profile = "bull_bias" if code == BULL_BIAS_CODE else "normal"
+        name = NAME_OVERRIDES.get(code, name)
         stocks.append({"code": code, "name": name, "industry": industry, "profile": profile})
 
     counts = Counter(s["industry"] for s in stocks)
