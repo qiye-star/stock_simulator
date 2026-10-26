@@ -89,7 +89,7 @@
 }
 .seg button {
   position: relative;
-  min-height: 38px;
+  min-height: var(--tap);
   padding: 0 10px;
   font-size: var(--fs-sm);
   font-weight: 600;
@@ -116,18 +116,18 @@
   display: inline-grid;
 }
 .seg--inline button {
-  min-height: 32px;
+  min-height: var(--tap);
   padding: 0 14px;
 }
 .seg--mini button {
-  min-height: 30px;
+  min-height: var(--tap);
   padding: 0 10px;
 }
 .seg--inline-full {
   margin-bottom: 8px;
 }
 .seg--inline-full button {
-  min-height: 34px;
+  min-height: var(--tap);
 }
 
 /* ---------- 步进器 ---------- */
@@ -231,7 +231,7 @@
   margin-top: 10px;
 }
 .chip {
-  min-height: 36px;
+  min-height: var(--tap);
   border-radius: 10px;
   font-size: var(--fs-sm);
   font-weight: 600;
@@ -315,7 +315,7 @@
 .dock__panel {
   position: relative;
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(var(--dock-n, 5), minmax(0, 1fr));
   height: var(--dock-h);
   padding: 5px;
   border-radius: 22px;
@@ -330,7 +330,7 @@
   top: 5px;
   bottom: 5px;
   left: 5px;
-  width: calc((100% - 10px) / 4);
+  width: calc((100% - 10px) / var(--dock-n, 5));
   border-radius: 17px;
   background: var(--hover);
   transform: translateX(calc(100% * var(--dock-i)));
@@ -360,6 +360,7 @@
   transform: scale(1.22) translateY(-2px); /* 触屏版“放大镜”效果 */
 }
 .dock__label {
+  white-space: nowrap;
   font-size: 10.5px;
   font-weight: 600;
   letter-spacing: 0.02em;
@@ -672,4 +673,609 @@
 .empty-inline {
   margin: 0;
   padding: 16px;
+}
+
+/* ---------- 呼吸点（交易中 / 自动交易运行中） ---------- */
+@keyframes pulse {
+  70% {
+    box-shadow: 0 0 0 6px transparent;
+  }
+}
+
+/* ---------- 交易状态栏 SS.tradeBar（08 §4.2） ---------- */
+.trade-bar-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.trade-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  padding: 14px 16px;
+  border-radius: var(--r-lg);
+  background: var(--bg-1);
+  border: 1px solid var(--line);
+  color: var(--text-1);
+  text-align: left;
+  transition: transform var(--dur-1) var(--ease-out);
+}
+.trade-bar:active {
+  transform: scale(0.99);
+}
+.trade-bar__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+}
+.trade-bar__lead {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.trade-bar__status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 24px;
+  padding: 0 10px;
+  border-radius: 12px;
+  background: var(--bg-2);
+  color: var(--text-2);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.trade-bar__dot {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--text-3);
+}
+.trade-bar[data-state="live"] .trade-bar__status {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.trade-bar[data-state="live"] .trade-bar__dot {
+  background: var(--accent);
+  box-shadow: 0 0 0 0 var(--accent-glow);
+  animation: pulse 2s infinite;
+}
+.trade-bar__day {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  font-size: var(--fs-sm);
+  color: var(--text-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.trade-bar__help {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  margin-left: 2px;
+  border-radius: 50%;
+  border: 1px solid var(--line-strong);
+  font-size: var(--fs-xs);
+  color: var(--text-2);
+}
+.trade-bar__main {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+}
+.trade-bar__time {
+  font-size: 40px;
+  font-weight: 650;
+  line-height: 1;
+  letter-spacing: 0.5px;
+}
+.trade-bar__next {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  min-width: 0;
+  text-align: right;
+}
+.trade-bar__next > b {
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.trade-bar__next .t2 {
+  font-size: var(--fs-xs);
+  white-space: nowrap;
+}
+.trade-bar__track {
+  display: flex;
+  align-items: center;
+  height: 6px;
+}
+.trade-bar__seg {
+  position: relative;
+  flex: 1;
+  height: 6px;
+  overflow: hidden;
+  border-radius: 3px;
+  background: var(--bg-2);
+}
+.trade-bar__seg > i {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: calc(var(--p, 0) * 100%);
+  border-radius: 3px;
+  background: var(--accent);
+  transition: width var(--dur-3) var(--ease-out);
+}
+.trade-bar__gap {
+  flex: none;
+  width: 22px;
+  height: 2px;
+  background: var(--line-strong);
+}
+.trade-bar__ticks {
+  display: flex;
+  margin-top: -4px;
+  font-size: var(--fs-xs);
+  color: var(--text-2);
+}
+.trade-bar__ticks > span {
+  display: flex;
+  justify-content: space-between;
+  min-width: 0;
+}
+.trade-bar__ticks > span:first-child,
+.trade-bar__ticks > span:last-child {
+  flex: 1;
+}
+.trade-bar__ticks > span:nth-child(2) {
+  width: 22px;
+}
+.trade-bar__ticks b {
+  font-weight: 400;
+}
+.trade-bar__actions {
+  margin-top: 0;
+}
+.trade-bar__actions .btn {
+  min-height: var(--tap);
+}
+
+/* 紧凑版：持仓 / 个股页右上角单行胶囊；热区扩展到 44px */
+.trade-bar--compact {
+  position: relative;
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+  width: auto;
+  height: 32px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: var(--bg-1);
+  border: 1px solid var(--line);
+  font-size: var(--fs-xs);
+  color: var(--text-2);
+  white-space: nowrap;
+}
+.trade-bar--compact::before {
+  content: "";
+  position: absolute;
+  inset: -6px -4px;
+}
+.trade-bar--compact .trade-bar__status {
+  height: auto;
+  padding: 0;
+  background: none;
+  color: var(--text-2);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+}
+.trade-bar--compact[data-state="live"] .trade-bar__status {
+  background: none;
+  color: var(--accent);
+}
+.trade-bar--compact .trade-bar__dot {
+  width: 6px;
+  height: 6px;
+}
+
+/* ---------- 交易时间说明弹层 SS.clockHelp（08 §4.3） ---------- */
+.clock-help {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding-bottom: 4px;
+}
+.clock-help__title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+}
+.clock-help__lead {
+  margin: 4px 0 0;
+  font-size: var(--fs-md);
+  color: var(--text-2);
+}
+.clock-help__note {
+  margin: -8px 0 0;
+  color: var(--text-2);
+}
+.timeline {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.timeline__row,
+.timeline__line {
+  display: grid;
+  grid-template-columns: 56px 14px minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+}
+.timeline__line {
+  align-items: stretch;
+  min-height: 22px;
+}
+.timeline__line > span {
+  grid-column: 2;
+  width: 2px;
+  margin-left: 4px;
+  background: var(--accent);
+}
+.timeline__line--dashed > span {
+  background: repeating-linear-gradient(to bottom, var(--text-3) 0 3px, transparent 3px 6px);
+}
+.timeline__time {
+  font-size: var(--fs-md);
+  font-weight: 600;
+}
+.timeline__dot {
+  width: 10px;
+  height: 10px;
+  margin-top: 6px;
+  border-radius: 50%;
+  background: var(--text-2);
+}
+.timeline__dot--on {
+  background: var(--accent);
+}
+.timeline__text {
+  min-width: 0;
+  font-size: var(--fs-md);
+}
+.timeline__text .t2 {
+  font-size: var(--fs-sm);
+}
+.rule-cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.rule-card {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding: 10px;
+  border-radius: var(--r-md);
+  background: var(--bg-2);
+}
+.rule-card > span:first-child {
+  font-size: 12px;
+  color: var(--text-2);
+}
+.rule-card > span:last-child {
+  font-size: var(--fs-sm);
+  line-height: 1.35;
+}
+.speed-pick {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.speed-pick__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+}
+.speed-pick__title {
+  font-size: 14px;
+  font-weight: 600;
+}
+.speed-pick__head > .t2 {
+  font-size: var(--fs-sm);
+}
+.speed-pick__note {
+  margin: 0;
+}
+.speed-seg {
+  display: flex;
+  gap: 6px;
+  padding: 4px;
+  border-radius: var(--r-md);
+  background: var(--bg-0);
+}
+.speed-seg__opt {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  min-height: var(--tap);
+  border: 1px solid transparent;
+  border-radius: 9px;
+  color: var(--text-2);
+  font-size: var(--fs-sm);
+  line-height: 1.2;
+  transition: background-color var(--dur-2), border-color var(--dur-2), color var(--dur-2);
+}
+.speed-seg__opt[aria-checked="true"] {
+  border-color: var(--accent);
+  background: var(--accent-faint);
+  color: var(--text-1);
+}
+.speed-seg__opt:disabled {
+  opacity: 0.5;
+}
+.speed-seg__sub {
+  font-size: var(--fs-xs);
+  color: var(--text-2);
+}
+
+/* ---------- “即将开放”占位卡 SS.soonCard（08 §3.2 / §5.3） ---------- */
+.soon-card {
+  margin-top: 12px;
+  padding: 16px;
+  border-radius: var(--r-lg);
+  background: var(--bg-1);
+  border: 1px solid var(--line);
+}
+.soon-card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.soon-card__title {
+  margin: 0;
+  font-size: var(--fs-md);
+  font-weight: 650;
+}
+.soon-card__desc {
+  margin: 8px 0 0;
+  line-height: 1.6;
+}
+
+/* ---------- 收盘小结 SS.closeSummary（08 §4.4，④）：.app 内全屏层，z-index 高于 Dock、低于抽屉 ---------- */
+.close-summary {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-0);
+  color: var(--text-1);
+  animation: cs-in var(--dur-3) var(--ease-out) both;
+}
+@keyframes cs-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.close-summary__scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: calc(var(--sat) + 14px) var(--gutter) 16px;
+}
+.close-summary__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 36px;
+}
+.close-summary__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 24px;
+  padding: 0 10px;
+  border-radius: 12px;
+  background: var(--bg-2);
+  color: var(--text-2);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+}
+.close-summary__badge > i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--text-2);
+}
+.close-summary__title {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+  outline: none;
+}
+.close-summary__lead {
+  margin: 4px 0 0;
+  font-size: 14px;
+  color: var(--text-2);
+}
+.close-summary__card {
+  padding: 14px;
+  border-radius: var(--r-lg);
+  background: var(--bg-1);
+  border: 1px solid var(--line);
+}
+.close-summary__card[hidden] {
+  display: none;
+}
+.close-summary__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.close-summary__h {
+  margin: 0 0 10px;
+  font-size: 14px;
+  font-weight: 600;
+}
+.close-summary__sectors {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+.cs-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.cs-cell__v {
+  font-size: 22px;
+  font-weight: 650;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cs-cell__v--sm {
+  font-size: 16px;
+  font-weight: 600;
+}
+.cs-skel {
+  height: 56px;
+  border-radius: var(--r-md);
+}
+.sector-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.sector-list > .xs {
+  margin-bottom: 2px;
+}
+.sector-list__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 14px;
+  min-width: 0;
+}
+.sector-list__row > span:first-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sector-list__row > .num {
+  flex: none;
+}
+.close-summary__foot {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px var(--gutter) calc(16px + var(--sab));
+  border-top: 1px solid var(--line);
+  background: var(--bg-0);
+}
+.close-summary__foot > [hidden] {
+  display: none;
+}
+.close-summary__countdown {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.close-summary__track {
+  flex: 1;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--bg-2);
+  overflow: hidden;
+}
+.close-summary__track > i {
+  display: block;
+  width: 0;
+  height: 100%;
+  background: var(--accent);
+  transition: width var(--dur-2) linear;
+}
+.close-summary__countdown .t2 {
+  white-space: nowrap;
+}
+.close-summary__actions {
+  display: flex;
+  gap: 8px;
+}
+.cs-btn {
+  flex: 1;
+  min-height: 48px;
+  border-radius: var(--r-md);
+}
+.cs-btn--ghost {
+  flex: 0 0 auto;
+  padding: 0 18px;
+  background: none;
+  border-color: var(--line-strong);
+  color: var(--text-2);
+}
+
+/* ---------- 昨日小结补看条（行情页顶部，④） ---------- */
+.recap-strip {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 44px;
+  padding: 0 4px 0 14px;
+  margin-top: 12px;
+  border-radius: var(--r-md);
+  background: var(--accent-faint);
+  border: 1px solid var(--accent-line);
+}
+.recap-strip__open {
+  flex: 1;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font-size: 14px;
+  font-weight: 600;
+  text-align: left;
+}
+.recap-strip__close {
+  width: 44px;
+  height: 44px;
+  flex: none;
 }

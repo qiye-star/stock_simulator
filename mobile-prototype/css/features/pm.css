@@ -1,0 +1,310 @@
+/*
+ * 预测市场（⑧ D）：列表、合约详情（选项/曲线/买卖面板）、结算记录、玩法页分区。
+ * 只用 tokens.css 的变量，不写色值。概率与积分一律中性或 --accent，不用 --up/--down（08 §1.1、04 §10.1）。
+ */
+
+/* ---------- 通用页面 ---------- */
+.pm-page {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px var(--gutter) 24px;
+}
+.pm-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.pm-title {
+  margin: 4px 0 0;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+.pm-meta {
+  margin: -6px 0 0;
+}
+.pm-more {
+  display: flex;
+  align-items: center;
+  min-height: var(--tap);
+  font-size: var(--fs-sm);
+  color: var(--accent);
+  text-decoration: none;
+}
+
+/* 概率条：accent 填充；选项未选中时由 .pm-opt__bar 改为中性灰 */
+.pm-bar {
+  display: block;
+  flex: 1;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--bg-2);
+  overflow: hidden;
+}
+.pm-bar > i {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+  background: var(--accent);
+  transition: width var(--dur-2) var(--ease-out);
+}
+
+/* ---------- 市场卡（列表、玩法页） ---------- */
+.pm-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 14px;
+  color: var(--text-1);
+  text-decoration: none;
+}
+.pm-card__top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: var(--fs-md);
+}
+.pm-card__q {
+  flex: 1;
+  min-width: 0;
+  line-height: 1.4;
+}
+.pm-card__top .tag {
+  flex: none;
+}
+.pm-card__lead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--fs-sm);
+}
+.pm-card__label {
+  flex: none;
+  max-width: 44%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pm-card__pct {
+  flex: none;
+  width: 56px;
+  text-align: right;
+}
+.pm-card__result {
+  font-size: var(--fs-sm);
+  color: var(--text-1);
+}
+.pm-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+}
+.pm-card__meta .tag {
+  height: 18px;
+}
+
+/* ---------- 合约详情：选项行 ---------- */
+.pm-opts {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px;
+  border-radius: var(--r-lg);
+  background: var(--bg-1);
+  border: 1px solid var(--line);
+}
+.pm-opt {
+  display: grid;
+  grid-template-columns: 76px 1fr 60px;
+  gap: 10px;
+  align-items: center;
+  width: 100%;
+  min-height: var(--tap);
+  padding: 0 10px;
+  border-radius: var(--r-sm);
+  border: 1px solid transparent;
+  background: none;
+  color: var(--text-1);
+  font: inherit;
+  font-size: var(--fs-sm);
+  text-align: left;
+  -webkit-tap-highlight-color: transparent;
+}
+.pm-opt[aria-pressed="true"] {
+  border-color: var(--accent-line);
+  background: var(--accent-faint);
+}
+.pm-opt__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pm-opt__bar > i {
+  background: var(--text-2);
+}
+.pm-opt[aria-pressed="true"] .pm-opt__bar > i {
+  background: var(--accent);
+}
+.pm-opt__pct {
+  text-align: right;
+}
+
+/* ---------- 曲线 ---------- */
+.pm-curve-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 14px;
+}
+.pm-curve-card__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  font-size: var(--fs-sm);
+}
+.pm-curve {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+.pm-curve__grid {
+  stroke: var(--line-strong);
+  stroke-width: 1;
+}
+.pm-curve__grid--mid {
+  stroke: var(--line);
+  stroke-dasharray: 3 4;
+}
+.pm-curve__area {
+  fill: var(--accent-soft);
+}
+.pm-curve__line {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.pm-curve__dot {
+  fill: var(--accent);
+}
+
+/* ---------- 买卖面板 ---------- */
+.pm-trade {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.pm-trade__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+.pm-trade__title {
+  font-size: var(--fs-md);
+  font-weight: 600;
+}
+.pm-trade__qty {
+  height: 48px;
+}
+.pm-trade__qty input {
+  width: 100%;
+  min-width: 0;
+  text-align: center;
+  font: 600 18px var(--font-num);
+  color: var(--text-1);
+  background: transparent;
+  border: 0;
+  outline: none;
+  font-variant-numeric: tabular-nums;
+}
+.pm-trade__rows {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: var(--fs-sm);
+}
+.pm-trade__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+.pm-trade__hold,
+.pm-trade__err {
+  margin: 0;
+}
+.pm-trade__actions {
+  display: flex;
+  gap: 8px;
+}
+.pm-trade__go {
+  flex: 1;
+}
+.pm-trade__alt {
+  min-width: 96px;
+}
+.pm-trade__result {
+  margin: 0;
+  font-size: var(--fs-sm);
+  line-height: 1.5;
+}
+
+/* ---------- 结算记录 ---------- */
+.pm-settle {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 14px;
+  color: var(--text-1);
+  text-decoration: none;
+}
+.pm-settle__q {
+  font-size: var(--fs-md);
+  line-height: 1.4;
+}
+.pm-settle__pnl {
+  font-size: var(--fs-lg);
+  font-weight: 700;
+}
+
+/* ---------- 玩法页分区（slot play:pm） ---------- */
+.pm-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.pm-section__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+}
+.pm-section__title {
+  margin: 0;
+  font-size: var(--fs-lg);
+  font-weight: 650;
+}
+.pm-section__body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.pm-section__empty {
+  margin: 0;
+  padding: 8px 0;
+  color: var(--text-2);
+  font-size: var(--fs-sm);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pm-bar > i {
+    transition: none;
+  }
+}

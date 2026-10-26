@@ -16,7 +16,7 @@
   letter-spacing: -0.01em;
 }
 .topbar--sub {
-  margin: 0 -10px 0;
+  margin: 0 0 0 -10px; /* 左侧外扩让返回图标对齐，右侧保持页面 gutter */
 }
 .topbar__center {
   flex: 1;
@@ -36,44 +36,19 @@
   fill: currentColor;
 }
 .icon-btn--sm {
+  position: relative;
   width: 36px;
   height: 36px;
   margin: -8px -8px -8px 0;
 }
+.icon-btn--sm::before {
+  content: "";
+  position: absolute;
+  inset: -4px; /* 视觉 36px，热区 44px */
+}
 .icon-btn--sm svg {
   width: 18px;
   height: 18px;
-}
-
-/* 交易时钟 */
-.clock-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  height: 28px;
-  padding: 0 10px;
-  border-radius: 999px;
-  background: var(--bg-1);
-  border: 1px solid var(--line);
-  font-size: var(--fs-xs);
-  color: var(--text-2);
-  white-space: nowrap;
-}
-.clock-chip__dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--text-3);
-}
-.clock-chip.is-live .clock-chip__dot {
-  background: var(--accent);
-  box-shadow: 0 0 0 0 var(--accent-glow);
-  animation: pulse 2s infinite;
-}
-@keyframes pulse {
-  70% {
-    box-shadow: 0 0 0 6px transparent;
-  }
 }
 
 /* ---------- 资产概览卡（行情页） ---------- */
@@ -167,9 +142,6 @@
 }
 .list-cols span:nth-child(2) {
   text-align: center;
-}
-.list-cols span:last-child {
-  text-align: right;
 }
 .hint {
   margin: 12px 0 0;
@@ -730,7 +702,7 @@
   margin-top: 12px;
 }
 .holding__actions .btn {
-  min-height: 38px;
+  min-height: var(--tap);
 }
 .holding__actions svg {
   width: 14px;
@@ -950,6 +922,7 @@
   font-weight: 650;
 }
 .save-chip {
+  margin-top: 12px;
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
@@ -1021,7 +994,8 @@
   color: var(--text-2);
 }
 
-.settings .set-row {
+.settings .set-row,
+.me-rows .set-row {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -1031,10 +1005,12 @@
   text-align: left;
   border-bottom: 1px solid var(--line);
 }
-.settings .set-row:last-child {
+.settings .set-row:last-child,
+.me-rows .set-row:last-child {
   border-bottom: 0;
 }
-.settings button.set-row:active {
+.settings button.set-row:active,
+.me-rows button.set-row:active {
   background: var(--hover);
 }
 .set-row__icon {
@@ -1117,4 +1093,101 @@
 }
 .login__form .order__error {
   min-height: 18px;
+}
+
+/* ---------- 行情页（08 §5.2）：状态栏 / banner / 资产卡 / 列表头 ---------- */
+.trade-bar-wrap,
+.asset-card {
+  margin-top: 12px;
+}
+.market-banner {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.market-banner:empty {
+  display: none;
+}
+.market-banner:not(:empty) {
+  margin-top: 12px;
+}
+.list-cols__sort {
+  position: relative;
+  justify-self: end;
+  min-height: 28px;
+  padding: 0 2px 0 10px;
+  font-size: var(--fs-xs);
+  color: var(--text-2);
+  white-space: nowrap;
+}
+.list-cols__sort::before {
+  content: "";
+  position: absolute;
+  inset: -8px -4px;
+}
+.list-cols__sort.is-on {
+  color: var(--accent);
+}
+
+/* ---------- 二级页顶栏（自动交易：返回 + 标题 + 操作） ---------- */
+.topbar__title--sub {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--fs-lg);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---------- 玩法页（08 §5.3）：分区纵向排列，各分区的占位卡由分区自己决定间距 ---------- */
+.play-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 12px;
+}
+.play-section > .soon-card {
+  margin-top: 0;
+}
+
+/* ---------- 我的页（08 §5.3）：挂载点与行入口 ---------- */
+.profile__badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+.profile__badges:empty {
+  display: none;
+}
+.me-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 12px;
+}
+.me-cards:empty {
+  display: none;
+}
+.me-rows {
+  margin-top: 12px;
+}
+.me-rows .set-row {
+  min-height: 52px;
+  padding: 0;
+}
+
+/* 存档切换抽屉的列表行 */
+.save-list .set-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 52px;
+  padding: 0;
+  text-align: left;
+  border-bottom: 1px solid var(--line);
+}
+.save-list .set-row:last-child {
+  border-bottom: 0;
 }

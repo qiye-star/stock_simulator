@@ -43,6 +43,11 @@
   /* 遮罩 */
   --scrim: rgba(0, 0, 0, 0.56);
 
+  /* 手机端改版（08 §3.6）：强调细边框；事件传导节点描边（行情数据） */
+  --accent-line: rgba(61, 219, 176, 0.28);
+  --up-line: rgba(246, 70, 93, 0.5);
+  --down-line: rgba(46, 189, 133, 0.5);
+
   /* 字体：数字使用等宽数字特性 */
   --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "HarmonyOS Sans SC",
     "MiSans", "Microsoft YaHei", "Segoe UI", Roboto, sans-serif;

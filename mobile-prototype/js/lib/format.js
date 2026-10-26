@@ -58,6 +58,9 @@
   const clock = (minute) =>
     `${String(Math.floor(minute / 60)).padStart(2, "0")}:${String(minute % 60).padStart(2, "0")}`;
 
+  /** 交易日序号（后端从 0 起）→ 面向用户的序号（从 1 起）：所有“第 N 个交易日”“D{n}”文案一律经此函数 */
+  const dayNo = (d) => (Number(d) || 0) + 1;
+
   /** 与后端 domain/clock.py 的 session_label 对应 */
   const SESSION_TEXT = {
     early_bird: "早盘开盘",
@@ -86,5 +89,5 @@
   /** 分 → 输入框用的 "12.34"（无千分位） */
   const toInput = (cents) => (Math.round(cents) / 100).toFixed(2);
 
-  SS.fmt = { yuan, yuanCompact, price, pctBp, pctFloat, trend, qty, volume, clock, session, dateTime, parseYuan, toInput };
+  SS.fmt = { yuan, yuanCompact, price, pctBp, pctFloat, trend, qty, volume, clock, dayNo, session, dateTime, parseYuan, toInput };
 })();

@@ -14,6 +14,14 @@
   const SS = (window.SS = window.SS || {});
   const { html } = SS;
 
+  /** 当前不可下单时的原因文案（07 §7.4 第 7 条），可下单时返回 "" */
+  function untradable() {
+    const store = SS.store;
+    if (store.isTrading()) return "";
+    const st = store.state;
+    return SS.clockModel.untradableText(SS.clockModel.normalize(st.clock, { save_rules: st.save.clock_rules, refresh_rate_ms: st.user.refresh_rate_ms }));
+  }
+
   function open({ code, side = "buy", quantity }) {
     const store = SS.store;
     const fmt = SS.fmt;
@@ -191,7 +199,7 @@
           }
           // 预校验，提前给出提示（最终以 placeOrder 的错误码为准）
           let warn = "";
-          if (!store.isTrading()) warn = store.errorText("MARKET_CLOSED");
+          if (!store.isTrading()) warn = untradable() || store.errorText("MARKET_CLOSED");
           else if (n <= 0) warn = "";
           else if (n > m) warn = st.side === "buy" ? store.errorText("TRADE_INSUFFICIENT_FUNDS") : (store.holding(code) && n <= store.holding(code).quantity ? store.errorText("TRADE_T1_SELL_BLOCKED") : store.errorText("TRADE_INSUFFICIENT_HOLDINGS"));
           $("error").textContent = warn || submitErr || (confirmDev ? store.errorText("TRADE_PRICE_DEVIATION_CONFIRM") + "，再点一次确认下单" : "");
@@ -283,5 +291,5 @@
     }
   }
 
-  SS.orderSheet = { open };
+  SS.orderSheet = { open, untradable };
 })();

@@ -10,6 +10,11 @@
 (function () {
   const SS = (window.SS = window.SS || {});
   const open = new Set();
+  // 等待“没有任何抽屉打开”再执行的任务（如交易说明的首次自动弹出，让位于预测卡）
+  const idleQueue = [];
+  function drainIdle() {
+    while (open.size === 0 && idleQueue.length) idleQueue.shift()();
+  }
 
   function openSheet({ title = "", render, onClose, className = "" }) {
     const host = SS.$(".app");
@@ -43,6 +48,7 @@
         document.removeEventListener("keydown", onKey);
         onClose && onClose();
         if (lastFocus && lastFocus.focus) lastFocus.focus({ preventScroll: true });
+        drainIdle(); // 焦点还原之后再开排队的抽屉，焦点落在新抽屉里
       },
     };
     open.add(api);
@@ -106,6 +112,13 @@
   SS.sheet = {
     open: openSheet,
     closeAll: () => Array.from(open).forEach((a) => a.close()),
+    /** 当前是否有抽屉/弹层打开 */
+    hasOpen: () => open.size > 0,
+    /** 没有抽屉打开时立即执行 fn，否则排队，等最后一个抽屉关闭后再执行（一次只执行一个，执行中又开了抽屉则其余继续等） */
+    whenIdle(fn) {
+      if (open.size === 0) return fn();
+      idleQueue.push(fn);
+    },
   };
 
   // ---------- Toast ----------

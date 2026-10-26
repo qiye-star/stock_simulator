@@ -7,7 +7,7 @@
  *        写操作（下单、自动交易、自选、暂停…）调用 REST 后更新 state 并 emit 事件。
  *
  * 与假数据版的差异：
- *   - placeOrder / autoSave / autoDelete / autoControl / setPaused / setRefreshRate 返回 Promise；
+ *   - placeOrder / autoSave / autoDelete / autoControl / setPaused / skipClock / setRefreshRate 返回 Promise；
  *   - toggleWatch / autoToggle 为乐观更新（同步返回新值，失败自动回滚并 toast）；
  *   - 新增 init / login / register / logout / saves 管理 / loadDetail / loadMoreTrades / exportSave。
  * 行情缓存：state.byCode 只缓存“已加载过”的股票（自选、持仓/规则涉及的、列表翻过的页、看过的详情）；
@@ -47,7 +47,7 @@
 
   const blankStatus = () => ({ enabled: false, paused: false, max_total_trades: 100, total_trades: 0, success_trades: 0, failed_trades: 0, total_pnl_cents: 0 });
   const state = {
-    clock: { paused: false, tick: 0, trading_day: 0, clock_minute: 570, session: "closed", skipped_ticks: 0 },
+    clock: { paused: false, tick: 0, trading_day: 0, clock_minute: 570, skipped_ticks: 0 },
     stocks: [],
     byCode: {},
     save: { id: null, name: "", mode: "normal", initial_fund_cents: 0, buy_fee_rate: "0.0003", sell_fee_rate: "0.0013", t0_mode: false, trade_unit: 100 },
@@ -57,7 +57,7 @@
     trades: [],
     tradesCursor: null,
     auto: { configs: [], status: blankStatus(), events: [] },
-    user: { username: "", refresh_rate_ms: 3000, created_at: "1970-01-01T00:00:00Z" },
+    user: { username: "", refresh_rate_ms: 3000, clock_speed: "normal", created_at: "1970-01-01T00:00:00Z" },
   };
   // 资产曲线：来自 GET /saves/{id}/equity-curve（后端按交易日持久化收盘权益）；末点（live）由实时权益替换
   state._equity = [];
@@ -74,15 +74,12 @@
           return (c === "x" ? r : (r & 3) | 8).toString(16);
         });
 
-  // ---------- 时段 ----------
-  function sessionLabel(m) {
-    if (m >= 570 && m <= 575) return "early_bird";
-    if (m >= 695 && m <= 700) return "night_owl";
-    if (m >= 780 && m <= 785) return "afternoon_open";
-    if ((m >= 570 && m <= 690) || (m >= 780 && m <= 900)) return "trading";
-    return "closed";
-  }
-  const isTrading = () => !state.clock.paused && state.clock.session !== "closed";
+  // ---------- 时段（字段全部来自服务端 ClockOut / tick.clock，经 SS.clockModel 归一化；不在本地推导） ----------
+  /** 当前存档的时钟规则（v1/v2）：clock 字段优先，缺省用 SaveOut.clock_rules */
+  const rulesNow = () => state.clock.clock_rules || (state.save && state.save.clock_rules) || "v1";
+  const clock2 = () => SS.clockModel.normalize(state.clock, { refresh_rate_ms: state.user.refresh_rate_ms, save_rules: state.save.clock_rules });
+  /** 此刻能否下单（07 §1.2：与暂停无关；停留与盘后为 false） */
+  const isTrading = () => clock2().trading;
 
   // ---------- 行情 ----------
   /** 分钟 → 分时图下标（与 pages/stock.js 的读数映射一致：9:30=0，午休折叠，15:00=240） */
@@ -93,7 +90,8 @@
     return Math.min(240, 121 + (m - 780));
   }
 
-  const isTradingMinute = (m) => (m >= 570 && m <= 690) || (m >= 780 && m <= 900);
+  /** 分钟是否为交易分钟（分时点只记录交易分钟；v2 的 11:30 / 15:00 不算） */
+  const isTradingMinute = (m) => SS.clockModel.tradingOf(m, rulesNow());
 
   /**
    * 由 s._pts（后端分时点）重建：
@@ -196,8 +194,15 @@
     if (fresh) rebuildSeries(s);
     return s;
   }
+  /** 时钟字段白名单（07 §1.2）：undefined 不覆盖，null 要覆盖（如 next_event.at 在暂停时为 null） */
+  const CLOCK_KEYS = ["paused", "tick", "trading_day", "clock_minute", "skipped_ticks", "clock_rules", "phase", "trading", "next_event", "ms_per_minute", "next_tick_at", "fast_forward_at", "server_time"];
   function applyClock(c) {
-    for (const k of ["paused", "tick", "trading_day", "clock_minute", "session", "skipped_ticks"]) if (c[k] !== undefined) state.clock[k] = c[k];
+    for (const k of CLOCK_KEYS) if (c[k] !== undefined) state.clock[k] = c[k];
+    if (c.server_time) {
+      // 本机时钟偏差：server_time − 收到响应时的 Date.now()（SS.clockModel.normalize 用它校正倒计时）
+      const t = Date.parse(c.server_time);
+      if (Number.isFinite(t)) state.clock._offset_ms = t - Date.now();
+    }
   }
 
   /** GET /market（服务端分页/搜索/排序）：把结果并入缓存，返回 {items, next_cursor, total} */
@@ -360,12 +365,7 @@
       case "tick": {
         const c = msg.clock || {};
         const dayChanged = c.trading_day != null && c.trading_day !== state.clock.trading_day;
-        state.clock.tick = msg.tick;
-        state.clock.clock_minute = c.minute ?? state.clock.clock_minute;
-        state.clock.trading_day = c.trading_day ?? state.clock.trading_day;
-        state.clock.paused = !!c.paused;
-        const sess = sessionLabel(state.clock.clock_minute);
-        state.clock.session = c.trading ? (sess === "closed" ? "trading" : sess) : "closed";
+        applyClock({ ...c, tick: msg.tick, clock_minute: c.minute, paused: c.paused != null ? !!c.paused : undefined });
         const changed = [];
         for (const [code, price, bp, vol] of msg.q || []) {
           const s = quote(code);
@@ -387,6 +387,9 @@
         emit("tick", { clock: state.clock, changed });
         break;
       }
+      case "phase":
+        emit("phase", msg); // { from, to, trading_day, clock_minute }：收盘小结等订阅
+        break;
       case "trade":
       case "auto_event":
         scheduleAccountRefresh();
@@ -394,8 +397,12 @@
       case "error":
         if (msg.code === "AUTH_REQUIRED") api.onUnauthorized && api.onUnauthorized(new ApiError("AUTH_REQUIRED", 401));
         break;
+      case "achievement":
+      case "subscribed":
+      case "pong":
+        break; // 原型不展示
       default:
-        break; // achievement / subscribed / pong：原型不展示
+        emit("ws:" + msg.t, msg); // 透传给各玩法功能（ws:news / ws:prediction / ws:challenge …）
     }
   }
 
@@ -495,6 +502,45 @@
     INTERNAL_ERROR: "服务器开小差了，请稍后重试",
     NETWORK: "网络异常，请检查连接",
     BACKEND_UNAVAILABLE: "后端服务不可用",
+    EVENTS_DISABLED: "该存档未开启事件模式",
+    EVENT_NOT_FOUND: "事件不存在或尚未发布",
+    SUPPLY_EDGE_NOT_FOUND: "产业链关系不存在",
+    FEATURE_UNAVAILABLE: "功能即将开放",
+    PREDICTION_NOT_FOUND: "预测卡不存在",
+    PREDICTION_CLOSED: "预测已截止",
+    POINTS_INSUFFICIENT: "积分不足",
+    INTEL_LIMIT_REACHED: "今日情报卡已达上限",
+    INTEL_UNAVAILABLE: "该情报当前不可购买",
+    TITLE_NOT_UNLOCKED: "称号尚未解锁",
+    CHALLENGE_NOT_FOUND: "挑战不存在",
+    CHALLENGE_NOT_STARTED: "挑战尚未开始",
+    CHALLENGE_ENTRY_CLOSED: "今日挑战已停止报名",
+    CHALLENGE_ENDED: "挑战已结束",
+    CHALLENGE_NOT_ENTERED: "你还没有参加这场挑战",
+    CHALLENGE_ROUND_NOT_FOUND: "该回合不存在或尚未开始",
+    CHALLENGE_ROUND_CLOSED: "本回合已截止",
+    CHALLENGE_ANSWER_LIMIT: "修改次数已用完",
+    CHALLENGE_NOT_SETTLED: "挑战结算后才能查看",
+    CHALLENGE_UNSUPPORTED: "挑战存档不支持该操作",
+    REPLAY_LEVEL_NOT_FOUND: "关卡不存在或已下线",
+    REPLAY_UNSUPPORTED: "复盘存档不支持该操作",
+    REPLAY_STOCK_SUSPENDED: "该股票停牌，不能交易",
+    REPLAY_LIMIT_LOCKED: "该股封板，当前价位无法成交",
+    REPLAY_PREDICTION_PENDING: "还有预测题未作答，先作答再继续",
+    REPLAY_QUESTION_CLOSED: "这道预测题已截止或尚未开放",
+    REPLAY_SESSION_SETTLED: "本次复盘已结算",
+    REPLAY_REVEAL_LOCKED: "复盘结束后才能查看揭示",
+    PM_NOT_FOUND: "预测市场不存在",
+    PM_NOT_OPEN: "该市场当前不可交易",
+    PM_LOCKED_AHEAD: "你的挑战进度已超过公共进度，本场市场暂不对你开放",
+    PM_NOT_ELIGIBLE: "暂不满足交易条件",
+    PM_SLIPPAGE_EXCEEDED: "价格已变动，请重新报价",
+    PM_INSUFFICIENT_SHARES: "持有份额不足",
+    PM_TRADE_TOO_SMALL: "成交额过小",
+    PM_POSITION_LIMIT: "已达本市场投入上限",
+    PM_DAILY_LIMIT: "已达本场挑战的买入额度",
+    PM_RATE_LIMITED: "操作过于频繁，请稍后再试",
+    PM_BUSY: "市场繁忙，请重试",
   };
   const errorText = (code) => ERROR_TEXT[code] || (code ? `操作失败（${code}）` : "操作失败");
   /** 统一的失败提示（toast） */
@@ -508,10 +554,12 @@
     stop();
     state.user = await api.get("/me");
     let saves = await api.get("/saves");
-    if (!saves.length) saves = [await api.post("/saves", { body: { name: "主存档", trade_unit: 100 } })];
+    if (!saves.length) saves = [await api.post("/saves", { body: { name: "主存档", trade_unit: 100, clock_rules: 2, events_enabled: true } })];
     state.savesList = saves;
     const want = ls.get("ss.saveId");
-    await openSave(saves.find((s) => s.id === want) || saves[0]);
+    // 上次停在挑战存档（不在普通存档列表里）时，回到参加前的普通存档
+    const back = ls.get("ss.returnSaveId");
+    await openSave(saves.find((s) => s.id === want) || saves.find((s) => s.id === back) || saves[0]);
   }
   async function openSave(sv) {
     stop();
@@ -521,6 +569,7 @@
     ls.set("ss.saveId", sv.id);
     await Promise.all([listQuotes({ watchlisted: true, limit: 500 }), loadAccount()]); // 先缓存自选，其余按需分页加载
     await ensureAccountQuotes();
+    emit("save", state.save); // features 订阅它清空自己的缓存
   }
   async function login(username, password) {
     await api.post("/auth/login", { body: { username, password } });
@@ -540,13 +589,18 @@
     return state.savesList;
   }
   async function switchSave(id) {
-    const sv = state.savesList.find((s) => s.id === id) || (await listSaves()).find((s) => s.id === id);
+    // 挑战存档不进 GET /saves（只列普通存档），按 id 直接取
+    const sv =
+      state.savesList.find((s) => s.id === id) ||
+      (await listSaves()).find((s) => s.id === id) ||
+      (await api.get(`/saves/${encodeURIComponent(id)}`).catch(() => null));
     if (!sv) throw new ApiError("SAVE_NOT_FOUND", 404);
     await openSave(sv);
     start();
   }
-  async function createSave(name) {
-    const sv = await api.post("/saves", { body: { name: name || "", trade_unit: 100 } });
+  /** opts.events_enabled：事件模式（01 §1.1，创建后不可改） */
+  async function createSave(name, opts = {}) {
+    const sv = await api.post("/saves", { body: { name: name || "", trade_unit: 100, clock_rules: 2, events_enabled: !!opts.events_enabled } });
     state.savesList.unshift(sv);
     await openSave(sv);
     start();
@@ -681,10 +735,35 @@
     applyClock(c);
     emit("tick", { clock: state.clock, changed: [] });
   }
+  /**
+   * POST /clock/skip：跳到下一个关键时点（v1 规则，07 的 v2 语义由后端决定，前端只应用返回的 ClockOut）。
+   * 一次推进多个 tick，缓存内行情与时钟立即补拉；跨交易日时账户（T+1 可卖数量）一并刷新。
+   */
+  async function skipClock() {
+    const dayBefore = state.clock.trading_day;
+    const c = await api.post(`${base()}/clock/skip`);
+    applyClock(c);
+    let changed = [];
+    try {
+      changed = await loadMarket();
+    } catch (e) {
+      if (e instanceof ApiError && e.status === 401) throw e;
+    }
+    if (state.clock.trading_day !== dayBefore) scheduleAccountRefresh();
+    emit("tick", { clock: state.clock, changed });
+    return c;
+  }
   async function setRefreshRate(ms) {
     state.user = await api.patch("/me", { body: { refresh_rate_ms: ms } });
     start(); // 推送间隔在连接建立时读取，需重连
   }
+  /** 游戏速度（v2 存档）：PATCH /me {clock_speed}；服务端按新档重算 ms_per_minute 与推送节奏，需重连 */
+  async function setClockSpeed(speed) {
+    state.user = await api.patch("/me", { body: { clock_speed: speed } });
+    start();
+  }
+  /** 收盘小结（07 §1.4）：tradingDay 缺省为当前交易日；越界 422 */
+  const loadDaySummary = (tradingDay) => api.get(`${base()}/day-summary`, { query: { trading_day: tradingDay } });
   const tradesHasMore = () => !!state.tradesCursor;
   async function loadMoreTrades() {
     if (!state.tradesCursor) return;
@@ -721,7 +800,12 @@
     start,
     stop,
     setPaused,
+    skipClock,
+    applyClock,
+    emitLocal: emit,
     setRefreshRate,
+    setClockSpeed,
+    loadDaySummary,
     toggleWatch,
     portfolio,
     holding,

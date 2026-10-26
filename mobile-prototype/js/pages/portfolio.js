@@ -1,6 +1,6 @@
 /**
  * 持仓与资产（#/portfolio）—— 对应 GET /saves/{id}/portfolio
- *   - 总资产 CountUp、累计/今日盈亏；
+ *   - 总资产（直接显示终值）、累计/今日盈亏；右上紧凑交易状态栏 SS.tradeBar（compact）；
  *   - 资产曲线（强调色单线，7 日 / 30 日 / 全部），按住查看某日读数；
  *   - 仓位占比条（持仓 vs 现金）；
  *   - 持仓卡片（SpotlightCard）：现价/成本/浮盈，卡内直接「加仓 / 卖出」，点卡片进详情。
@@ -60,12 +60,9 @@
       paintCurve();
     });
 
-    function paintSummary(first) {
+    function paintSummary() {
       const p = store.portfolio();
-      SS.mount($("clock"), SS.clockChip(store.state.clock));
-      const eq = $("equity");
-      if (hide()) eq.textContent = MASK;
-      else SS.countUp(eq, p.equity_cents, { format: (v) => fmt.yuan(v), duration: first ? 1300 : 600, from: first ? p.initial_fund_cents : undefined });
+      $("equity").textContent = hide() ? MASK : fmt.yuan(p.equity_cents);
       const netBp = Math.round((p.net_pnl_cents / p.initial_fund_cents) * 10000);
       $("net").className = `num sm ${fmt.trend(p.net_pnl_cents)}`;
       $("net").textContent = hide() ? MASK : `${fmt.yuan(p.net_pnl_cents, { sign: true })} ${fmt.pctBp(netBp)}`;
@@ -104,7 +101,7 @@
         count: vals.length,
         onMove(i) {
           if (i == null) return def();
-          SS.mount($("readout"), html`<span class="t3">${data[i].kind === "initial" ? "起点" : `D${data[i].trading_day}`}</span><span>${hide() ? MASK : fmt.yuan(vals[i])}</span>`);
+          SS.mount($("readout"), html`<span class="t3">${data[i].kind === "initial" ? "起点" : `D${fmt.dayNo(data[i].trading_day)}`}</span><span>${hide() ? MASK : fmt.yuan(vals[i])}</span>`);
         },
       });
       def();
@@ -183,17 +180,18 @@
       }
     }
 
-    paintSummary(true);
+    paintSummary();
     paintCurve();
     paintList();
 
     const offs = [
+      SS.tradeBar.mount($("clock"), { variant: "compact" }),
       store.on("tick", () => {
-        paintSummary(false);
+        paintSummary();
         patchCards();
       }),
       store.on("order", () => {
-        paintSummary(false);
+        paintSummary();
         paintList();
       }),
     ];

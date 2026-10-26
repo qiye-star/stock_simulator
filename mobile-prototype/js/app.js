@@ -1,6 +1,10 @@
 /**
  * 启动入口：注册路由、挂载 Dock、启动行情。
- * 必须最后加载（依赖 lib/ mock/ components/ pages/ 中注册到 SS 的全部模块）。
+ * 必须最后加载（依赖 lib/ mock/ components/ pages/ features/ 中注册到 SS 的全部模块）。
+ *
+ * 路由注册顺序（同 pattern 先注册者生效）：先各玩法 features（SS.features.*.routes），再核心页面，最后“即将开放”占位
+ * ——某玩法上线后注册了同路由，占位自动失效，本文件不用再改。
+ * 各 feature 的 init()（注册 slot/guard、订阅 WS）在进入就绪态后、首个页面渲染前只调用一次。
  *
  * 真实模式启动流程：骨架屏 → store.init()（/me、/saves、行情、持仓…）
  *   - 401：跳 #/login，登录成功后 SS.enter() 重新 init；
@@ -12,12 +16,32 @@
   const P = SS.pages;
   const { html } = SS;
 
+  // 1. 各玩法 feature 的路由
+  Object.values(SS.features).forEach((f) => (f.routes || []).forEach(([pattern, page]) => SS.router.add(pattern, page)));
+  // 2. 核心页面
   SS.router.add("/market", P.market);
   SS.router.add("/stock/:code", P.stock);
   SS.router.add("/portfolio", P.portfolio);
-  SS.router.add("/auto", P.auto);
+  SS.router.add("/play", P.play);
   SS.router.add("/me", P.me);
+  SS.router.add("/auto", P.auto); // 二级页，入口在“我的”
   SS.router.add("/login", P.login);
+  // 3. 占位（feature 已注册同路由时本条不会命中）
+  SS.router.add("/news", P.comingSoon({ tab: "news", title: "快讯", desc: "开启事件模式的存档会在这里显示公告、新闻、政策与传闻。" }));
+
+  let featuresInited = false;
+  function initFeatures() {
+    if (featuresInited) return;
+    featuresInited = true;
+    SS.closeSummary.watch(); // 收盘小结是全局层（v2 收盘自动弹出），与 features 同一时机挂载一次
+    for (const [name, f] of Object.entries(SS.features)) {
+      try {
+        f.init && f.init();
+      } catch (e) {
+        console.warn(`feature ${name} 初始化失败`, e);
+      }
+    }
+  }
 
   SS.dock.mount(SS.$("#dock"));
   const view = () => SS.$("#view");
@@ -37,6 +61,7 @@
 
   if (SS.isMock) {
     SS.ready = true;
+    initFeatures();
     startRouter();
     SS.store.start();
     return;
@@ -57,6 +82,7 @@
     await SS.store.init();
     SS.booted = true; // 行情页跳过假的 650ms 骨架
     SS.ready = true;
+    initFeatures();
     SS.store.start();
     if (location.hash === "#/market") startRouter();
     else location.hash = "#/market";
@@ -99,6 +125,7 @@
     }
     SS.booted = true;
     SS.ready = true;
+    initFeatures();
     if (location.hash === "#/login") location.hash = "#/market";
     startRouter();
     SS.store.start();

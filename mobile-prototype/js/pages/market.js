@@ -1,9 +1,12 @@
 /**
- * 行情 / 自选（#/market）
- *   - 顶部资产概览卡（CountUp + 极淡 Aurora），可一键隐藏金额；点卡片进入持仓；
- *   - 自选 / 全部 分段切换，支持按涨跌幅排序与搜索（代码/名称）；
+ * 行情 / 自选（#/market），布局对照画板 Main：
+ *   - 顶栏“行情” + 搜索图标（展开输入框）；
+ *   - 交易状态栏 SS.tradeBar（full）：状态、时间、倒计时、时段进度；点开交易时间说明（首次进入主动弹一次）；
+ *   - banner 挂载点 market.banner（快讯条/挑战横幅由各玩法注册）；
+ *   - 总资产卡（直接显示终值，无滚动动效；极淡 Aurora），今日/累计盈亏，可一键隐藏金额；点卡片进入持仓；
+ *   - 自选 / 全部 分段；列表表头点“涨跌”循环排序，搜索（代码/名称）；
  *     自选来自本地缓存；「全部」走服务端分页（store.listQuotes：limit/cursor/q/sort），滚动到底自动加载更多；
- *   - 行：名称代码 | 迷你走势 | 现价 + 涨跌幅；左滑露出 买入/卖出，直接弹下单抽屉；点行进入详情；
+ *   - 行：名称 + `代码 · 行业` | 迷你走势 | 现价 + 涨跌幅；左滑露出 买入/卖出，直接弹下单抽屉；点行进入详情；
  *   - 行情 tick 到来时就地更新数字与走势线（不重绘列表，避免打断滑动）。
  */
 (function () {
@@ -19,7 +22,9 @@
   };
   /** 「全部」列表的分页状态（模块级：从详情页返回时保留已加载的页；token 用于丢弃过期请求） */
   const all = { saveId: null, items: [], cursor: null, total: 0, done: false, loading: false, error: false, started: false, token: 0 };
-  const SORT_TEXT = ["默认", "涨幅↓", "涨幅↑"];
+  const SORT_TEXT = ["现价 / 涨跌", "涨跌 ↓", "涨跌 ↑"];
+  /** 玩法分段（SS.marketLists）的行情缓存：value → {saveId, items, notes, at, loading, token, error} */
+  const custom = {};
 
   /** 金额隐藏开关（每位浏览者的本地偏好） */
   const prefs = {
@@ -41,17 +46,8 @@
   SS.prefs = prefs;
   const MASK = "****";
 
-  function clockChip(c) {
-    const live = !c.paused && c.session !== "closed";
-    return html`<span class="clock-chip ${live ? "is-live" : ""}">
-      <i class="clock-chip__dot" aria-hidden="true"></i>
-      <span>${SS.fmt.session(c.session, c.paused)}</span>
-      <span class="num t3">D${c.trading_day} ${SS.fmt.clock(c.clock_minute)}</span>
-    </span>`;
-  }
-  SS.clockChip = clockChip;
-
-  function rowHtml(s) {
+  /** note：行情分段的注记（如“事发”“传导”），可选 */
+  function rowHtml(s, note) {
     const fmt = SS.fmt;
     const tr = fmt.trend(s.change_bp);
     return html`<div class="swipe-row animated-list__item" data-code="${s.code}">
@@ -62,7 +58,7 @@
       <a class="swipe-row__main quote-row" href="#/stock/${s.code}" draggable="false">
         <div class="quote-row__name">
           <div class="quote-row__title">${s.name}</div>
-          <div class="xs t3 num">${s.code}${s.code === "999999" ? html` <span class="tag">彩蛋</span>` : ""}</div>
+          <div class="xs t3 num">${s.code} · ${s.industry}${s.code === "999999" ? html` <span class="tag">彩蛋</span>` : ""}${note ? html` <span class="tag ${note === "事发" ? "tag--accent" : ""}">${note}</span>` : ""}</div>
         </div>
         <div class="quote-row__spark" data-q="spark">${raw(SS.chart.sparkline(s._spark || s._series, s.prev_close_cents))}</div>
         <div class="quote-row__right">
@@ -74,12 +70,13 @@
   }
 
   function skeleton() {
-    return html`<div class="asset-card skeleton-card">
+    return html`<div class="skeleton" style="height:150px;border-radius:18px;margin-bottom:12px"></div>
+      <div class="asset-card skeleton-card">
         <div class="skeleton" style="width:40%;height:12px"></div>
         <div class="skeleton" style="width:70%;height:34px;margin-top:12px"></div>
         <div class="skeleton" style="width:55%;height:12px;margin-top:14px"></div>
       </div>
-      <div class="skeleton" style="height:36px;margin:20px 0 8px;border-radius:12px"></div>
+      <div class="skeleton" style="height:36px;margin:12px 0 8px;border-radius:12px"></div>
       ${skeletonRows(7)}`;
   }
   function skeletonRows(n) {
@@ -107,14 +104,19 @@
     } else draw();
 
     function draw() {
-      const p = store.portfolio();
-      const c = store.state.clock;
+      // 玩法注册的行情分段（如“事件相关”）；当前选中的分段已不可见时回到自选
+      const extraLists = SS.marketLists.list();
+      if (ui.list !== "watch" && ui.list !== "all" && !extraLists.some((v) => v.value === ui.list)) ui.list = "watch";
       SS.mount(
         view,
         html`<header class="topbar">
             <h1 class="topbar__title">行情</h1>
-            <div data-q="clock">${clockChip(c)}</div>
+            <button type="button" class="icon-btn" data-role="search-toggle" aria-label="搜索" aria-expanded="false">${SS.icon("search")}</button>
           </header>
+
+          <div data-role="tradebar"></div>
+          <div data-role="recap"></div>
+          <div class="market-banner" data-role="banner"></div>
 
           <section class="asset-card" data-role="asset" tabindex="0" role="link" aria-label="查看持仓">
             <div class="aurora" aria-hidden="true"></div>
@@ -124,46 +126,40 @@
             </div>
             <div class="asset-card__total num" data-role="equity"></div>
             <div class="asset-card__row">
-              <div>
-                <div class="xs t3">今日盈亏</div>
-                <div class="num sm" data-role="today"></div>
-              </div>
-              <div>
-                <div class="xs t3">累计盈亏</div>
-                <div class="num sm" data-role="net"></div>
-              </div>
-              <div>
-                <div class="xs t3">可用资金</div>
-                <div class="num sm" data-role="cash"></div>
-              </div>
+              <span class="t2 sm">今日 <span class="num" data-role="today"></span></span>
+              <span class="t2 sm">累计 <span class="num" data-role="net"></span></span>
             </div>
           </section>
 
-          <div class="list-head">
-            <div class="seg seg--inline" data-role="list">
-              <span class="seg__thumb" aria-hidden="true"></span>
-              <button type="button" data-value="watch" class="${ui.list === "watch" ? "is-active" : ""}">自选</button>
-              <button type="button" data-value="all" class="${ui.list === "all" ? "is-active" : ""}">全部</button>
-            </div>
-            <button type="button" class="sort-btn" data-role="sort">${SS.icon("sort")}<span>${SORT_TEXT[ui.sort]}</span></button>
+          <div class="seg seg--inline-full seg--list" data-role="list">
+            <span class="seg__thumb" aria-hidden="true"></span>
+            <button type="button" data-value="watch" class="${ui.list === "watch" ? "is-active" : ""}">自选</button>
+            <button type="button" data-value="all" class="${ui.list === "all" ? "is-active" : ""}">全部</button>
+            ${extraLists.map((v) => html`<button type="button" data-value="${v.value}" class="${ui.list === v.value ? "is-active" : ""}">${v.label}</button>`)}
           </div>
-          <label class="search">
+          <label class="search" data-role="search" hidden>
             ${SS.icon("search")}
             <input class="input" type="search" data-role="q" value="${ui.q}" placeholder="搜索代码 / 名称" autocomplete="off" enterkeyhint="search" aria-label="搜索股票" />
           </label>
-          <div class="list-cols xs t3"><span>名称</span><span>走势</span><span>现价 / 涨跌</span></div>
+          <div class="list-cols xs t3">
+            <span>名称</span><span>走势</span>
+            <button type="button" class="list-cols__sort" data-role="sort" aria-label="切换排序">${SORT_TEXT[ui.sort]}</button>
+          </div>
           <div class="quote-list" data-role="rows"></div>
           <p class="hint xs t3">← 左滑行可快速买入 / 卖出</p>`
       );
 
       const $ = (r) => SS.$(`[data-role="${r}"]`, view);
-      paintAsset(true);
+      offs.push(SS.tradeBar.mount($("tradebar"), { variant: "full" }));
+      offs.push(SS.closeSummary.mountRecap($("recap")));
+      offs.push(SS.slots.mount("market.banner", $("banner")));
+      paintAsset();
 
       $("eye").addEventListener("click", (e) => {
         e.stopPropagation();
         prefs.hide = !prefs.hide;
         SS.mount($("eye"), SS.icon(prefs.hide ? "eyeOff" : "eye"));
-        paintAsset(false);
+        paintAsset();
       });
       $("asset").addEventListener("click", () => SS.router.navigate("/portfolio"));
       $("asset").addEventListener("keydown", (e) => e.key === "Enter" && SS.router.navigate("/portfolio"));
@@ -174,9 +170,27 @@
       });
       $("sort").addEventListener("click", () => {
         ui.sort = (ui.sort + 1) % 3;
-        SS.$("span", $("sort")).textContent = SORT_TEXT[ui.sort];
+        $("sort").textContent = SORT_TEXT[ui.sort];
+        $("sort").classList.toggle("is-on", ui.sort !== 0);
         SS.haptic(5);
         refresh();
+      });
+      $("sort").classList.toggle("is-on", ui.sort !== 0);
+
+      // 搜索：图标展开输入框；有关键词时常开，清空并失焦后自动收起
+      const showSearch = (on, focus) => {
+        $("search").hidden = !on;
+        $("search-toggle").setAttribute("aria-expanded", String(on));
+        if (on && focus) $("q").focus();
+      };
+      showSearch(!!ui.q, false);
+      $("search-toggle").addEventListener("click", () => {
+        if ($("search").hidden) showSearch(true, true);
+        else if ($("q").value.trim()) $("q").focus();
+        else showSearch(false);
+      });
+      $("q").addEventListener("blur", () => {
+        if (!$("q").value.trim()) showSearch(false);
       });
       let qT = null;
       $("q").addEventListener("input", (e) => {
@@ -202,17 +216,26 @@
       offs.push(() => io && io.disconnect());
 
       const swipe = SS.swipeRows($("rows"), {
-        onAction: (side, code) => SS.orderSheet.open({ code, side }),
+        onAction: (side, code) => {
+          // 不可交易时（午休 / 收盘 / 开盘前）左滑不打开抽屉，只提示原因（07 §7.4 第 7 条）
+          const why = SS.orderSheet.untradable();
+          if (why) return SS.toast(why, { icon: null, duration: 1800 });
+          SS.orderSheet.open({ code, side });
+        },
       });
       paintRows();
-      if (!ui.hintShown) {
-        ui.hintShown = true;
-        setTimeout(swipe.peek, 900);
-      }
+      // 首次进入先弹交易时间说明；弹出时本次不再做左滑提示
+      setTimeout(() => {
+        if (!alive) return;
+        if (SS.clockHelp.maybeAutoOpen()) return;
+        if (!ui.hintShown) {
+          ui.hintShown = true;
+          swipe.peek();
+        }
+      }, 400);
 
       offs.push(
-        store.on("tick", ({ clock, changed }) => {
-          SS.mount(SS.$('[data-q="clock"]', view), clockChip(clock));
+        store.on("tick", ({ changed }) => {
           for (const { code, dir } of changed) {
             const row = SS.$(`.swipe-row[data-code="${code}"]`, view);
             if (!row) continue;
@@ -231,9 +254,9 @@
             ce.className = `num pill pill--${tr}`;
             SS.mount(SS.$('[data-q="spark"]', row), raw(SS.chart.sparkline(s._spark || s._series, s.prev_close_cents)));
           }
-          paintAsset(false);
+          paintAsset();
         }),
-        store.on("order", () => paintAsset(false)),
+        store.on("order", () => paintAsset()),
         // 分时历史加载完成：刷新对应行的迷你走势
         store.on("series", (codes) => {
           for (const code of codes) {
@@ -244,21 +267,17 @@
         })
       );
 
-      function paintAsset(first) {
+      /** 总资产直接写终值（无滚动动效）；隐藏金额时显示 **** */
+      function paintAsset() {
         const p = store.portfolio();
-        const eq = $("equity");
-        if (prefs.hide) {
-          cancelAnimationFrame(eq._cuRaf);
-          eq.textContent = MASK;
-          eq._cuValue = undefined;
-        } else SS.countUp(eq, p.equity_cents, { format: (v) => fmt.yuan(v), duration: first ? 1400 : 600, from: first ? Math.round(p.equity_cents * 0.96) : undefined });
-        const set = (el, cents, pct) => {
-          el.className = `num sm ${prefs.hide ? "" : fmt.trend(cents)}`;
-          el.textContent = prefs.hide ? MASK : fmt.yuanCompact(cents, { sign: true }) + (pct != null ? ` ${fmt.pctBp(pct)}` : "");
+        $("equity").textContent = prefs.hide ? MASK : fmt.yuan(p.equity_cents);
+        const set = (el, cents, text) => {
+          el.className = `num ${prefs.hide ? "" : fmt.trend(cents)}`;
+          el.textContent = prefs.hide ? MASK : text;
         };
-        set($("today"), p._today_pnl_cents);
-        set($("net"), p.net_pnl_cents);
-        $("cash").textContent = prefs.hide ? MASK : fmt.yuanCompact(p.cash_cents);
+        set($("today"), p.day_pnl_cents, fmt.yuan(p.day_pnl_cents, { sign: true }));
+        const bp = p.initial_fund_cents ? Math.round((p.net_pnl_cents / p.initial_fund_cents) * 10000) : 0;
+        set($("net"), p.net_pnl_cents, fmt.pctBp(bp));
       }
 
       /** 切换排序/搜索：「全部」重置分页并重新请求，「自选」本地重排 */
@@ -332,6 +351,8 @@
       /** appendFrom > 0：「全部」追加新到的页，不重绘已有行（保持滑动状态与入场动画） */
       function paintRows(appendFrom = 0) {
         const rows = $("rows");
+        const def = extraLists.find((v) => v.value === ui.list);
+        if (def) return paintCustom(def);
         if (ui.list === "all") {
           if (!all.started) {
             SS.mount(rows, html`<div class="animated-list" data-role="items"></div><div data-role="foot"></div>`);
@@ -374,6 +395,56 @@
         SS.mount(rows, html`<div class="animated-list">${list.map(rowHtml)}</div>`);
         SS.animatedList(rows);
         store.loadSeries(list.map((x) => x.code));
+      }
+
+      /** 玩法分段：def.load() → {items, notes}；按存档缓存，切换分段时若超过 20 秒才重拉 */
+      function paintCustom(def) {
+        const rows = $("rows");
+        io && io.disconnect();
+        const sid = store.state.save.id;
+        let c = custom[def.value];
+        if (!c || c.saveId !== sid) c = custom[def.value] = { saveId: sid, items: null, notes: {}, error: null, at: 0, loading: false, token: 0 };
+        if (!c.loading && (c.items == null || Date.now() - c.at > 20000)) loadCustom(def, c);
+        if (c.items == null) {
+          swipe.close();
+          if (c.error && !c.loading)
+            SS.mount(rows, html`<div class="empty"><button type="button" class="load-more" data-role="custom-retry">加载失败，点击重试</button></div>`);
+          else SS.mount(rows, skeletonRows(6));
+          const retry = SS.$('[data-role="custom-retry"]', rows);
+          if (retry) retry.addEventListener("click", () => loadCustom(def, c));
+          return;
+        }
+        let list = c.items.filter(matches);
+        if (ui.sort === 1) list = list.slice().sort((a, b) => b.change_bp - a.change_bp);
+        else if (ui.sort === 2) list = list.slice().sort((a, b) => a.change_bp - b.change_bp);
+        swipe.close();
+        if (!list.length) {
+          SS.mount(rows, html`<div class="empty"><div class="empty__title">${ui.q ? "没有匹配的股票" : def.empty || "暂无"}</div></div>`);
+          return;
+        }
+        SS.mount(rows, html`<div class="animated-list">${list.map((s) => rowHtml(s, c.notes[s.code]))}</div>`);
+        SS.animatedList(rows);
+        store.loadSeries(list.map((x) => x.code));
+      }
+
+      async function loadCustom(def, c) {
+        const tk = ++c.token;
+        c.loading = true;
+        c.error = null;
+        try {
+          const r = await def.load();
+          if (!alive || c.token !== tk) return;
+          c.items = r.items || [];
+          c.notes = r.notes || {};
+          c.at = Date.now();
+        } catch (e) {
+          if (!alive || c.token !== tk) return;
+          c.error = e;
+          store.notifyError(e);
+        } finally {
+          if (alive && c.token === tk) c.loading = false;
+        }
+        if (alive && c.token === tk && ui.list === def.value) paintRows();
       }
     }
 

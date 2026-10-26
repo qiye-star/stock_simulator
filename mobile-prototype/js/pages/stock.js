@@ -1,8 +1,8 @@
 /**
  * 个股详情（#/stock/:code）—— 对应 GET /saves/{id}/market/{code} 与 /market/{code}/intraday（分时历史，WS 追加增量）
  *   - 顶栏：返回 / 名称代码 / 自选星标；
- *   - 大号现价 + 涨跌额/幅（红涨绿跌），关键指标网格；
- *   - 分时 / 日K 切换；按住图表拖动显示十字线读数；
+ *   - 大号现价 + 涨跌额/幅（红涨绿跌）、紧凑交易状态栏 SS.tradeBar（compact），关键指标网格；
+ *   - 分时 / 日K 切换；按住图表拖动显示十字线读数；日K 下方挂 stock.kline 槽（事件标记，⑤）；
  *   - 五档盘口、我的持仓摘要；
  *   - 底部吸附操作栏：卖出 / 买入 → 下单抽屉。
  */
@@ -77,6 +77,7 @@
         </section>
 
         <div data-role="mine"></div>
+        <div data-role="extra"></div>
 
         <div class="action-bar">
           <button type="button" class="btn btn-lg" data-role="sell">卖出</button>
@@ -106,7 +107,6 @@
       $("price").textContent = fmt.price(s.price_cents);
       $("chg").className = `quote-hero__chg num ${tr}`;
       $("chg").textContent = `${fmt.yuan(s.price_cents - s.prev_close_cents, { sign: true })}  ${fmt.pctBp(s.change_bp)}`;
-      SS.mount($("clock"), SS.clockChip(store.state.clock));
       const vs = (v) => fmt.trend(v - s.prev_close_cents);
       const cell = (k, v, cls = "") => html`<div><dt>${k}</dt><dd class="num ${cls}">${v}</dd></div>`;
       SS.mount(
@@ -182,6 +182,7 @@
             <div class="chart__vol">${raw(c.volSvg)}</div>
             <div class="chart__time xs t3 num"><span>${candles[0].date.slice(5)}</span><span>今日</span></div>`
         );
+        SS.slots.mount("stock.kline", fresh, { code, candles }); // ⑤ 事件标记（事件模式存档）
         SS.chart.crosshair(SS.$(".chart__plot", fresh), {
           count: candles.length,
           total: candles.length,
@@ -264,6 +265,8 @@
     loadDetail(true);
 
     const offs = [
+      SS.tradeBar.mount($("clock"), { variant: "compact" }),
+      SS.slots.mount("stock.extra", $("extra"), { code }), // ⑤ 相关事件（事件模式存档）
       store.on("tick", ({ changed }) => {
         paintHead();
         if (changed.some((c) => c.code === code)) {

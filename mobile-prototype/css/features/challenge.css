@@ -1,0 +1,467 @@
+/*
+ * 每日挑战（⑦ C）：玩法卡、挑战页（状态/回合/各轮/往期）、排行榜、复盘、公平性、挑战存档横幅。
+ * 只用 tokens.css 的变量；红绿只用于收益率（行情数据）；排名与积分用 --accent。触控 ≥ --tap；动画在 reduced-motion 下关闭（全局规则）。
+ */
+
+/* ---------- 玩法页挑战卡（slot play:challenge） ---------- */
+.challenge-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 0;
+  border-color: var(--accent-line);
+}
+.challenge-card .card__title {
+  margin: 0;
+  font-size: var(--fs-md);
+  color: var(--text-1);
+}
+.ch-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+.ch-desc {
+  margin: 0;
+}
+.ch-meta {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 8px;
+}
+.ch-meta__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.ch-meta__title {
+  font-size: var(--fs-md);
+}
+.ch-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap);
+  color: var(--accent);
+  font-size: var(--fs-sm);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.topbar__link {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap);
+  padding: 0 4px;
+  color: var(--accent);
+  font-size: var(--fs-sm);
+  text-decoration: none;
+}
+
+/* ---------- 回合条（4 段）：is-done 实心、is-live 半透明强调、is-pending 空 ---------- */
+.round-bar {
+  display: flex;
+  gap: 4px;
+}
+.round-bar__step {
+  flex: 1;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--bg-2);
+}
+.round-bar__step.is-done {
+  background: var(--accent);
+}
+.round-bar__step.is-live {
+  background: var(--accent);
+  opacity: 0.5;
+}
+
+/* ---------- 挑战页 ---------- */
+.ch-page {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 0 var(--gutter) 16px;
+}
+.ch-page > .card,
+.ch-page > section {
+  margin-top: 0;
+}
+.ch-status {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.ch-status__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.ch-status__count {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.ch-status__big {
+  font-size: 28px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+.ch-status .xs,
+.ch-status p {
+  margin: 0;
+}
+.ch-enter {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.ch-enter .card__title {
+  margin: 0;
+  font-size: var(--fs-md);
+  color: var(--text-1);
+}
+.ch-enter p {
+  margin: 0;
+}
+.ch-round {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px;
+  border-radius: var(--r-lg);
+  background: var(--bg-1);
+  border: 1px solid var(--accent-line);
+}
+.ch-round .pred-card {
+  gap: 14px;
+}
+.ch-round__status {
+  margin: 0;
+  text-align: center;
+}
+.ch-rounds {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.ch-past__title {
+  margin: 4px 0 0;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--text-2);
+}
+.ch-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.ch-row.is-pending {
+  color: var(--text-2);
+}
+.ch-row p {
+  margin: 0;
+}
+.ch-row__head,
+.ch-row__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.ch-row__foot > :last-child {
+  min-width: 0;
+  margin-left: auto;
+  text-align: right;
+}
+.ch-round-score {
+  white-space: nowrap;
+}
+.ch-round-score__n {
+  color: var(--accent);
+  font-size: 15px;
+  font-weight: 650;
+}
+.ch-row__title {
+  margin: 0;
+  font-size: var(--fs-md);
+  font-weight: 600;
+  line-height: 1.4;
+}
+.ch-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.ch-line {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: var(--fs-sm);
+}
+.ch-line__q {
+  flex: none;
+  width: 64px;
+}
+.ch-line__t {
+  flex: 1;
+  min-width: 0;
+}
+.ch-line__s {
+  flex: none;
+  min-width: 28px;
+  text-align: right;
+  color: var(--accent);
+}
+.ch-past {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.ch-past__row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 52px;
+  margin-top: 0;
+  color: var(--text-1);
+  text-decoration: none;
+}
+.ch-past__row > span:first-child {
+  flex: 1;
+  min-width: 0;
+}
+.ch-notice {
+  margin: 0 4px;
+}
+
+/* ---------- 复盘 ---------- */
+.ch-review__title {
+  margin: 4px 0 0;
+  font-size: var(--fs-lg);
+  font-weight: 650;
+}
+.ch-score {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.ch-score__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 16px;
+}
+.ch-score__cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.ch-score__big {
+  font-size: 22px;
+  font-weight: 650;
+  color: var(--text-1);
+}
+.ch-score__mid {
+  font-size: var(--fs-md);
+  font-weight: 600;
+  color: var(--text-1);
+}
+.ch-score__big.up {
+  color: var(--up);
+}
+.ch-score__big.down {
+  color: var(--down);
+}
+.ch-score__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+}
+.ch-score__pts {
+  font-size: var(--fs-lg);
+  font-weight: 650;
+  color: var(--accent);
+}
+.ch-score__foot .xs {
+  color: var(--text-2);
+}
+.ch-empty {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.ch-empty .card__title {
+  margin: 0;
+  font-size: var(--fs-md);
+  color: var(--text-1);
+}
+
+/* ---------- 公平性 ---------- */
+.ch-fair {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.ch-fair .card__title {
+  margin: 0;
+}
+.ch-fair p,
+.ch-fair .xs {
+  margin: 0;
+}
+.ch-hash,
+.ch-mono {
+  font-family: var(--font-num);
+  word-break: break-all;
+}
+.ch-kv {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 6px 10px;
+  margin: 4px 0 0;
+  font-size: var(--fs-xs);
+}
+.ch-kv dt {
+  color: var(--text-2);
+}
+.ch-kv dd {
+  margin: 0;
+  min-width: 0;
+}
+.ch-fair__verify {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+.ch-fair__result {
+  color: var(--text-2);
+}
+.ch-fair__result.is-ok {
+  color: var(--accent);
+}
+
+/* ---------- 排行榜 ---------- */
+.ch-board-seg {
+  margin-top: 0;
+}
+.board-me {
+  border-color: var(--accent-line);
+  margin-top: 0;
+}
+.board-me__row,
+.board-row {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) 64px 64px;
+  gap: 8px;
+  align-items: center;
+}
+.board-me__row {
+  min-height: 52px;
+}
+.board-me__rank {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--accent);
+}
+.board-me__who {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.board-me__name {
+  font-weight: 600;
+}
+.board-me__vals {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  font-size: var(--fs-sm);
+}
+.board-me__vals .xs {
+  color: var(--text-2);
+}
+.board-me__vals .up {
+  color: var(--up);
+}
+.board-me__vals .down {
+  color: var(--down);
+}
+.board-list {
+  padding: 0 14px;
+  background: var(--bg-1);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+}
+.board-row {
+  min-height: 48px;
+  border-bottom: 1px solid var(--line);
+  font-size: var(--fs-sm);
+}
+.board-row:last-child {
+  border-bottom: 0;
+}
+.board-row--head {
+  min-height: 32px;
+  font-size: var(--fs-xs);
+  color: var(--text-2);
+}
+.board-row--me {
+  margin: 0 -14px;
+  padding: 0 14px;
+  background: var(--accent-faint);
+  box-shadow: inset 2px 0 0 var(--accent);
+}
+.board-row .r {
+  text-align: right;
+}
+.board-row .up {
+  color: var(--up);
+}
+.board-row .down {
+  color: var(--down);
+}
+.board-row__name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  overflow: hidden;
+}
+.board-row__n {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.board-row__tag {
+  flex: none;
+}
+
+/* ---------- 挑战存档横幅（slot market.banner:challenge-banner） ---------- */
+.challenge-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: var(--tap);
+  padding: 0 12px;
+  border-radius: var(--r-md);
+  background: var(--accent-faint);
+  border: 1px solid var(--accent-line);
+  color: var(--text-1);
+  font-size: var(--fs-sm);
+  text-decoration: none;
+}
+.challenge-banner__text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
